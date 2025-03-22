@@ -15,7 +15,15 @@ function Home() {
 function Project() {
   return (
     <div className="page-container">
-      <h1>Project 목록</h1>
+      <h1>Tetro-Mok</h1>
+      <iframe
+        src="/unity/index.html"
+        width="100%"
+        height="600"
+        frameBorder="0"
+        scrolling="no"
+        title="Tetro-Mok"
+      />
     </div>
   );
 }
@@ -59,5 +67,6 @@ function App() {
     </Router>
   );
 }
+
 
 export default App;
