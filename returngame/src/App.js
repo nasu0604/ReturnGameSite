@@ -158,9 +158,8 @@ function ProjectDetails() {
       <div className="project-layout">
         {/* 왼쪽 - 게임 설명 */}
         <div className="game-instructions">
-          <h2>게임 소개</h2>
+          <h2>게임 방법</h2>
           <div className="instruction-box">
-            <h3>게임 규칙</h3>
             <p>1. 게임판에 돌을 놓으려면 교차점을 클릭하세요.</p>
             <p>2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.</p>
             <p>3. 검은색이 먼저 시작합니다.</p>
@@ -188,9 +187,12 @@ function ProjectDetails() {
               className="game-iframe"
             />
           </div>
+          <p className="game-description">{project.description}</p>
         </div>
-
-        <div className="ratings-comments-wrapper">
+      </div>
+      
+      {/* 평점 및 댓글 창을 레이아웃 하단에 배치 */}
+      <div className="ratings-comments-wrapper">
         <div className="ratings-comments">
           <div className="rating-container">
             <h2>평가하기</h2>
@@ -255,9 +257,6 @@ function ProjectDetails() {
           </div>
         </div>
       </div>
-      </div>
-    
-      
     </div>
   );
 }
