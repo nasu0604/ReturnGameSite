@@ -91,7 +91,6 @@ body {
 }
 
 h1 {
-  margin-bottom: 20px;
   color: #333;
   line-height: 1.4;
   letter-spacing: -0.02em;
@@ -423,12 +422,13 @@ iframe {
 
 .project-layout {
   display: grid;
-  grid-template-columns: 1fr 1000px 1fr; /* 2열 레이아웃 유지 */
+  grid-template-columns: 400px 960px 400px; /* 2열 레이아웃 유지 */
   margin-bottom: 15px;
   gap: 20px;
   width: 100%;
   height: 700px;
   padding: 20px;
+  align-content: center;
 }
 
 .game-instructions {
