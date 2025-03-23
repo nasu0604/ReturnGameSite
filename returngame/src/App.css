@@ -14,8 +14,8 @@ body {
 }
 
 .logo{
-  width: 50px;
-  height: 50px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   vertical-align: middle;
 }
@@ -29,9 +29,12 @@ body {
   width: 100%;
   display: flex;
   color: white;
-  padding: 20px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-left: 20px;
+  padding-right:40px;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 16px;
   position: fixed;
   top: 0;
   left: 0;
@@ -82,9 +85,9 @@ body {
 }
 
 .page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  margin: 0;
+  width: 100%; /* 페이지 전체 너비를 100%로 설정 */
+  padding: 20px; /* 필요한 패딩을 설정 */
 }
 
 h1 {
@@ -96,6 +99,10 @@ h1 {
 
 h3 {
   margin-top: 10px;
+  font-weight: 200;
+}
+
+h4 {
   font-weight: 200;
 }
 
@@ -114,19 +121,25 @@ h3 {
   line-height: 1.9;
 }
 
-/* 프로젝트 리스트 스타일 */
+
 ul {
-  display: flex;
-  flex-wrap: wrap; /* 항목이 가로로 넘칠 경우 자동으로 줄 바꿈 */
-  justify-content: center; /* 항목을 중앙 정렬 */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 0;
+  list-style-type: none;
+  margin: 0 auto; 
+  max-width: 1200px;
+  justify-items: center; /* 각 그리드 아이템을 가운데 정렬 */
+}
+
+li {
+  display: block;
+  width: 100%;
 }
 
 ul li {
   margin: 10px 0;
-}
-
-ul li::marker {
-  content: none;  /* 마커를 없애기 */
 }
 
 ul li a {
@@ -143,31 +156,24 @@ ul li a {
 }
 
 .project-item {
-  display: inline-block; /* 블록 요소가 아닌 인라인 블록으로 설정 */
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   text-decoration: none;
   color: #000;
-  margin: 10px;
 }
 
 .project-image-container {
-  overflow: hidden;
+  width: 100%;
 }
 
 .project-image {
-  width: 350px;
-  height: 200px;
+  width: 100%;
+  height: auto;
   object-fit: cover;
   border-radius: 10px;
 }
 
-.project-text {
-  margin-top: 10px;
-  font-weight: bold;
-  font-size: 16px;
-}
-
-/* 프로젝트 세부 페이지 스타일 */
 textarea {
   margin-top: 10px;
   padding: 10px;
@@ -182,10 +188,6 @@ iframe {
   border-radius: 10px;
 }
 
-/* App.css에 추가할 부분 */
-
-/* 애니메이션 관련 CSS */
-/* 애니메이션 관련 CSS */
 .animated-page {
   animation-duration: 500ms;
   animation-fill-mode: forwards;
@@ -217,11 +219,308 @@ iframe {
   }
 }
 
-/* 이 CSS는 App.css의 기존 내용에 추가해야 합니다 */
-
-/* 콘텐츠 영역에 상대적 위치 지정 */
 .content {
   position: relative;
   min-height: 100vh;
   padding-top: 10px;
+}
+
+.project-details {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.project-info {
+  text-align: left;
+  width: 100%;
+}
+
+/* Add these styles to your App.css */
+.project-text-container {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.project-text-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.project-title {
+  text-align: left;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.project-subtitle {
+  text-align: left;
+  font-size: 14px;
+  color: #666;
+  font-weight: 200;
+}
+
+.project-rating{
+  text-align: right;
+}
+
+.project-concept {
+  text-align:right;
+  color: #666;
+  font-weight: 100;
+  font-size: 14px;
+}
+
+.rating-container {
+  text-align: center;
+}
+
+.star-rating {
+  display: inline-flex;
+  font-size: 24px;
+  margin-top: 10px;
+}
+
+.star {
+  color: #ddd;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color 0.2s;
+}
+
+.star.active {
+  color: #FFD700;
+}
+
+.rating-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 16px;
+  z-index: 1001;
+  animation: fadeInOut 3s forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.comments-section {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  width: 100%;
+}
+
+.comment-form {
+  margin-top: 10px;
+  margin-bottom: 30px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+
+.author-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.comment-input {
+  width: 100%;
+  min-height: 80px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-size: 14px;
+}
+
+.comment-submit-btn {
+  background-color: #000;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.comment-submit-btn:hover {
+  background-color: #333;
+}
+
+.comments-list {
+  margin-top: 20px;
+}
+
+.comment-item {
+  background-color: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+  margin-left:15px;
+  margin-right:15px;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.comment-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.comment-text {
+  line-height: 1.5;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+.delete-comment-btn {
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  background: none;
+  border: none;
+  color: #ff5555;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.delete-comment-btn:hover {
+  opacity: 1;
+}
+
+.no-comments {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 20px;
+}
+
+/* 추가할 CSS 코드 */
+
+.project-layout {
+  display: grid;
+  grid-template-columns: 3fr 1fr; /* 2열 레이아웃 유지 */
+  margin-bottom: 15px;
+  gap: 20px;
+  width: 100%;
+  height: 700px;
+  padding: 20px;
+}
+
+.game-instructions {
+  order: 2; /* Moves the game description to the right */
+}
+
+.instruction-box {
+  background-color: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+.instruction-box p {
+  margin-bottom: 10px;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.game-info {
+  background-color: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.game-info p {
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.game-container {
+  order: 1;
+}
+
+.game-frame-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+
+.ratings-comments-wrapper {
+  margin-top: 50px; /* 평점 및 댓글 창과 게임 레이아웃 사이 여백 추가 */
+  width: 100%;
+}
+
+/* Change to 16:9 ratio (56.25% = 9/16 * 100) */
+.game-frame-wrapper::before {
+  content: "";
+  display: block;
+}
+
+.game-iframe {
+  width: 100%;
+  height: 100%;
+}
+
+.game-description {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #555;
+}
+
+.ratings-comments {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+
+.rating-container {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.comments-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.comments-list {
+  flex: 1;
+  overflow-y: auto;
 }
