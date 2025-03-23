@@ -8,6 +8,7 @@ function Home() {
   return (
     <div className="page-container">
       <h1>Hello World!</h1>
+      <h1>본 사이트는 75% 비율에 최적화되어있습니다.</h1>
     </div>
   );
 }
@@ -189,70 +190,70 @@ function ProjectDetails() {
           </div>
           <p className="game-description">{project.description}</p>
         </div>
-      </div>
       
       {/* 평점 및 댓글 창을 레이아웃 하단에 배치 */}
-      <div className="ratings-comments-wrapper">
-        <div className="ratings-comments">
-          <div className="rating-container">
-            <h2>평가하기</h2>
-            <StarRating 
-              projectId={project.id} 
-              initialRating={userRating}
-              onRatingChange={handleRatingChange}
-            />
-          </div>
-          
-          <div className="comments-section">
-            <h2>댓글</h2>
+        <div className="ratings-comments-wrapper">
+          <div className="ratings-comments">
+            <div className="rating-container">
+              <h2>평가하기</h2>
+              <StarRating 
+                projectId={project.id} 
+                initialRating={userRating}
+                onRatingChange={handleRatingChange}
+              />
+            </div>
             
-            {/* 댓글 입력 폼 */}
-            <form onSubmit={handleAddComment} className="comment-form">
-              <div className="input-group">
-                <input
-                  type="text"
-                  value={commentAuthor}
-                  onChange={(e) => setCommentAuthor(e.target.value)}
-                  placeholder="이름 (선택사항)"
-                  className="author-input"
-                />
-              </div>
-              <div className="input-group">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="댓글을 입력하세요..."
-                  className="comment-input"
-                  required
-                />
-              </div>
-              <button type="submit" className="comment-submit-btn">댓글 작성</button>
-            </form>
-            
-            {/* 댓글 리스트 */}
-            <div className="comments-list">
-              {comments[project.id] && comments[project.id].length > 0 ? (
-                comments[project.id].map(comment => (
-                  <div key={comment.id} className="comment-item">
-                    <div className="comment-header">
-                      <strong>{comment.author}</strong>
-                      <span className="comment-date">
-                        {new Date(comment.timestamp).toLocaleDateString()} 
-                        {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+            <div className="comments-section">
+              <h2>댓글</h2>
+              
+              {/* 댓글 입력 폼 */}
+              <form onSubmit={handleAddComment} className="comment-form">
+                <div className="input-group">
+                  <input
+                    type="text"
+                    value={commentAuthor}
+                    onChange={(e) => setCommentAuthor(e.target.value)}
+                    placeholder="이름 (선택사항)"
+                    className="author-input"
+                  />
+                </div>
+                <div className="input-group">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="댓글을 입력하세요..."
+                    className="comment-input"
+                    required
+                  />
+                </div>
+                <button type="submit" className="comment-submit-btn">댓글 작성</button>
+              </form>
+              
+              {/* 댓글 리스트 */}
+              <div className="comments-list">
+                {comments[project.id] && comments[project.id].length > 0 ? (
+                  comments[project.id].map(comment => (
+                    <div key={comment.id} className="comment-item">
+                      <div className="comment-header">
+                        <strong>{comment.author}</strong>
+                        <span className="comment-date">
+                          {new Date(comment.timestamp).toLocaleDateString()} 
+                          {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="comment-text">{comment.text}</p>
+                      <button 
+                        onClick={() => handleDeleteComment(comment.id)} 
+                        className="delete-comment-btn"
+                      >
+                        삭제
+                      </button>
                     </div>
-                    <p className="comment-text">{comment.text}</p>
-                    <button 
-                      onClick={() => handleDeleteComment(comment.id)} 
-                      className="delete-comment-btn"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="no-comments">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
-              )}
+                  ))
+                ) : (
+                  <p className="no-comments">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
