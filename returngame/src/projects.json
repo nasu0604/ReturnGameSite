@@ -5,8 +5,8 @@
       "main_desc": "test",
       "imagePath": "/unity/tetro-mok/tetro-mok.png",
       "iframeSrc": "/unity/tetro-mok/index.html",
-      "description": "테트리스와 오목을 결합한 퓨전 보드게임!",
-      "concept": "공포"
+      "concept": "공포",
+      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
     },
     {
       "id": "test",
@@ -14,8 +14,8 @@
       "main_desc": "test",
       "imagePath": "/unity/test/test.png",
       "iframeSrc": "/unity/test/index.html",
-      "description": "test",
-      "concept": "퍼즐"
+      "concept": "퍼즐",
+      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
     },
     {
       "id": "test2",
@@ -23,8 +23,8 @@
       "main_desc": "test",
       "imagePath": "/unity/test2/test2.png",
       "iframeSrc": "/unity/test2/index.html",
-      "description": "test2",
-      "concept": "추리"
+      "concept": "추리",
+      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
     },
     {
       "id": "test3",
@@ -32,7 +32,7 @@
       "main_desc": "test",
       "imagePath": "/unity/test3/test3.png",
       "iframeSrc": "/unity/test3/index.html",
-      "description": "test3",
-      "concept": "코믹"
+      "concept": "코믹",
+      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
     }
   ]

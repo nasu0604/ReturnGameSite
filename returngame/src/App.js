@@ -8,22 +8,21 @@ function Home() {
   return (
     <div className="page-container">
       <h1>Hello World!</h1>
-      <h1>본 사이트는 75% 비율에 최적화되어있습니다.</h1>
     </div>
   );
 }
 
 // 프로젝트 리스트 페이지
-// 프로젝트 리스트 페이지
 function Project() {
-  // Get stored ratings from localStorage
+  // 평점 상태 관리
   const [ratings, setRatings] = useState(() => {
     const storedRatings = localStorage.getItem('projectRatings');
     return storedRatings ? JSON.parse(storedRatings) : {};
   });
 
-  // Calculate average rating
+  // 평점 평균 계산 함수
   const getAverageRating = (projectId) => {
+
     // 해당 프로젝트 찾기
     const project = projectsData.find(p => p.id === projectId);
     
@@ -33,11 +32,12 @@ function Project() {
       const sum = ratings[projectId].reduce((total, rating) => total + rating, 0);
       return (sum / ratings[projectId].length).toFixed(1);
     } else {
-      // 사용자 평점이 없으면 기본 평점 반환 (기본값 0.0)
+      // 사용자 평점이 없으면 기본 평점 반환환
       return project.rating ? project.rating.toFixed(1) : "0.0";
     }
   };
 
+  // 프로젝트 리스트 UI
   return (
     <div className="page-container">
       <h1>프로젝트 리스트</h1>
@@ -70,9 +70,14 @@ function Project() {
   );
 }
 
-// ProjectDetails 컴포넌트에 댓글 기능 추가하기
-// ProjectDetails 컴포넌트 내에서 평점 및 댓글 창을 하단으로 이동
+// 텍스트 줄 바꿈 적용 함수
+const formatTextWithLineBreaks = (text) => {
+  return text.split('\n').map((line, index) => <span key={index}>{line}<br /></span>);
+};
+
+// 프로젝트 상세 페이지
 function ProjectDetails() {
+  // URL 파라미터로 프로젝트 이름 가져오기
   const { projectName } = useParams();
   const project = projectsData.find(p => p.id === projectName);
   
@@ -88,6 +93,7 @@ function ProjectDetails() {
     return storedComments ? JSON.parse(storedComments) : {};
   });
   
+  // 댓글 입력 필드 상태 관리
   const [newComment, setNewComment] = useState('');
   const [commentAuthor, setCommentAuthor] = useState('');
 
@@ -151,7 +157,8 @@ function ProjectDetails() {
   // 사용자 평점 계산
   const userRating = ratings[project.id] ? 
     ratings[project.id][ratings[project.id].length - 1] : 0;
-
+  
+  // 프로젝트 상세 페이지 UI
   return (
     <div className="page-container">
       <h1>{project.name}</h1>
@@ -159,17 +166,13 @@ function ProjectDetails() {
       <div className="project-layout">
         {/* 왼쪽 - 게임 설명 */}
         <div className="game-instructions">
-          <h2>게임 방법</h2>
           <div className="instruction-box">
-            <p>1. 게임판에 돌을 놓으려면 교차점을 클릭하세요.</p>
-            <p>2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.</p>
-            <p>3. 검은색이 먼저 시작합니다.</p>
-            <p>4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.</p>
-            <p>5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다.</p>
+            <h2>게임 방법</h2>
+            <p>{formatTextWithLineBreaks(project.how)}</p> {/* 줄 바꿈 적용 */}
           </div>
           
           <div className="game-info">
-            <h3>게임 정보</h3>
+            <h2>게임 정보</h2>
             <p><strong>장르:</strong> 보드 게임</p>
             <p><strong>난이도:</strong> 초급자 ~ 중급자</p>
             <p><strong>개발자:</strong> return Game;</p>
@@ -191,7 +194,7 @@ function ProjectDetails() {
           <p className="game-description">{project.description}</p>
         </div>
       
-      {/* 평점 및 댓글 창을 레이아웃 하단에 배치 */}
+      {/* 오른쪽 - 평점 및 댓글 화면면 */}
         <div className="ratings-comments-wrapper">
           <div className="ratings-comments">
             <div className="rating-container">
@@ -262,8 +265,9 @@ function ProjectDetails() {
   );
 }
 
-
+// 소개 페이지
 function Introduce() {
+  // 소개 페이지 UI
   return (
     <div className="page-container">
       <h1>우리는 return Game;입니다</h1>
@@ -273,9 +277,11 @@ function Introduce() {
 
 // 네비게이션 바
 function Navbar() {
+  // 현재 활성화된 탭 상태 관리
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('/');
 
+  // 현재 경로에 따라 활성화된 탭 설정
   useEffect(() => {
     const path = location.pathname;
     if (path === '/') {
@@ -287,6 +293,7 @@ function Navbar() {
     }
   }, [location]);
 
+  // 네비게이션 바 UI
   return (
     <nav className="navbar">
       <div className="navbar-title">
@@ -318,8 +325,10 @@ function Navbar() {
 
 // Animation
 function AnimatedRoutes() {
+  // 페이지 전환 시 애니메이션 효과
   const location = useLocation();
   
+  // 페이지 전환 애니메이션
   return (
     <div className="content">
       <Routes location={location}>
@@ -360,17 +369,20 @@ function AnimatedRoutes() {
   );
 }
 
+// 별점 컴포넌트
 function StarRating({ projectId, initialRating = 0, onRatingChange }) {
+  // 별점 상태 관리
   const [rating, setRating] = useState(initialRating);
   const [hover, setHover] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
 
+  // 별점 클릭 이벤트 처리 함수
   const handleClick = (starValue) => {
     setRating(starValue);
     onRatingChange(projectId, starValue);
     setShowPopup(true);
     
-    // 3초 후에 팝업을 자동으로 닫고 별점 UI 초기화
+    // 1초 후에 팝업을 자동으로 닫고 별점 UI 초기화
     setTimeout(() => {
       setShowPopup(false);
       setRating(0);
@@ -378,6 +390,7 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
     }, 1000);
   };
 
+  // 별점 UI
   return (
     <div>
       <div className="star-rating">
