@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, collection, doc, getDoc, setDoc, onSnapshot } from './firebase';
+import { updateDoc, arrayUnion } from 'firebase/firestore';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import projectsData from './projects.json';
 import './App.css';
@@ -175,31 +176,31 @@ function ProjectDetails() {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
+  
     const author = commentAuthor.trim() || '익명';
     const timestamp = new Date().toISOString();
-
+  
     const newCommentObj = {
       id: Date.now(),
       author,
       text: newComment,
       timestamp,
     };
-
+  
     const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
-    
+  
     try {
+      // 문서가 없으면 미리 생성
       const docSnap = await getDoc(projectCommentsRef);
-      let updatedComments = [];
-      
-      if (docSnap.exists()) {
-        updatedComments = [...(docSnap.data().comments || []), newCommentObj];
-      } else {
-        updatedComments = [newCommentObj];
+      if (!docSnap.exists()) {
+        await setDoc(projectCommentsRef, { comments: [] });
       }
-      
-      await setDoc(projectCommentsRef, { comments: updatedComments });
-
+  
+      // 새 댓글 추가 (병합 방식)
+      await updateDoc(projectCommentsRef, {
+        comments: arrayUnion(newCommentObj)
+      });
+  
       // 입력 필드 초기화
       setNewComment('');
       setCommentAuthor('');
