@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from './firebase';
+import { db, collection, doc, getDoc, setDoc, onSnapshot } from './firebase';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import projectsData from './projects.json';
 import './App.css';
@@ -15,35 +15,51 @@ function Home() {
 
 // 프로젝트 리스트 페이지
 function Project() {
-  // 평점 상태 관리
-  const [ratings] = useState(() => {
-    const storedRatings = localStorage.getItem('projectRatings');
-    return storedRatings ? JSON.parse(storedRatings) : {};
-  });
+  const [ratings, setRatings] = useState({});
 
-  // 평점 평균 계산 함수
+  // Firestore에서 각 프로젝트의 평점 데이터를 실시간 구독
+  useEffect(() => {
+    const unsubscribes = projectsData.map((project) => {
+      const projectRef = doc(collection(db, 'projectRatings'), project.id);
+      return onSnapshot(projectRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setRatings((prev) => ({
+            ...prev,
+            [project.id]: docSnap.data().ratings || [],
+          }));
+        } else {
+          setRatings((prev) => ({
+            ...prev,
+            [project.id]: [],
+          }));
+        }
+      });
+    });
+
+    // 컴포넌트 언마운트 시 구독 해제
+    return () => unsubscribes.forEach((unsub) => unsub());
+  }, []);
+
+  // 평균 평점 계산 함수
   const getAverageRating = (projectId) => {
+    const project = projectsData.find((p) => p.id === projectId);
+    const projectRatings = ratings[projectId] || [];
 
-    // 해당 프로젝트 찾기
-    const project = projectsData.find(p => p.id === projectId);
-    
-    // 사용자 평점이 있는지 확인
-    if (ratings[projectId] && ratings[projectId].length > 0) {
-      // 사용자 평점이 있으면 평균 계산
-      const sum = ratings[projectId].reduce((total, rating) => total + rating, 0);
-      return (sum / ratings[projectId].length).toFixed(1);
+    if (projectRatings.length > 0) {
+      const averageRating =
+        projectRatings.reduce((total, rating) => total + rating, 0) / projectRatings.length;
+      return averageRating.toFixed(1);
     } else {
-      // 사용자 평점이 없으면 기본 평점 반환환
-      return project.rating ? project.rating.toFixed(1) : "0.0";
+      return project.rating ? project.rating.toFixed(1) : '0.0';
     }
   };
 
-  // 프로젝트 리스트 UI
+  // UI 렌더링
   return (
     <div className="page-container">
       <h1>프로젝트 리스트</h1>
       <ul>
-        {projectsData.map(project => (
+        {projectsData.map((project) => (
           <li key={project.id}>
             <Link to={`/project/${project.id}`} className="project-item">
               <div className="project-image-container">
@@ -71,6 +87,7 @@ function Project() {
   );
 }
 
+
 // 텍스트 줄 바꿈 적용 함수
 const formatTextWithLineBreaks = (text) => {
   return text.split('\n').map((line, index) => <span key={index}>{line}<br /></span>);
@@ -86,40 +103,43 @@ function ProjectDetails() {
   const [ratings, setRatings] = useState([]);
 
   useEffect(() => {
-    // Firestore의 'projectRatings' 컬렉션에서 해당 프로젝트 문서를 구독합니다.
-    const unsubscribe = db
-      .collection('projectRatings')
-      .doc(project.id)
-      .onSnapshot(doc => {
-        if (doc.exists) {
-          setRatings(doc.data().ratings);
-        } else {
-          setRatings([]);
-        }
-      });
+    // 최신 Firebase 방식으로 업데이트된 Firestore 구독 메서드
+    const projectRatingsRef = doc(collection(db, 'projectRatings'), project.id);
+    const unsubscribe = onSnapshot(projectRatingsRef, (doc) => {
+      if (doc.exists()) {
+        console.log("받은 평점 데이터:", doc.data().ratings);
+        setRatings(doc.data().ratings || []);
+      } else {
+        setRatings([]);
+      }
+    });
     return () => unsubscribe();
   }, [project.id]);
 
   const getAverageRating = () => {
-    if (ratings.length === 0) return "0.0";
-    const sum = ratings.reduce((acc, cur) => acc + cur, 0);
-    return (sum / ratings.length).toFixed(1);
+    if (ratings.length === 0) {
+      // 평점이 없는 경우 프로젝트의 기본 평점 반환
+      return project.rating ? project.rating.toFixed(1) : "0.0";
+    }
+    
+    // 현재 평점들의 평균 계산
+    const averageRating = ratings.reduce((acc, cur) => acc + cur, 0) / ratings.length;
+    return averageRating.toFixed(1);
   };
   
   // 댓글 시스템 상태 관리
   const [comments, setComments] = useState([]);
 
   useEffect(() => {
-    const unsubscribe = db
-      .collection('projectComments')
-      .doc(project.id)
-      .onSnapshot(doc => {
-        if (doc.exists) {
-          setComments(doc.data().comments);
-        } else {
-          setComments([]);
-        }
-      });
+    // 최신 Firebase 방식으로 업데이트된 Firestore 구독 메서드
+    const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
+    const unsubscribe = onSnapshot(projectCommentsRef, (doc) => {
+      if (doc.exists()) {
+        setComments(doc.data().comments || []);
+      } else {
+        setComments([]);
+      }
+    });
     return () => unsubscribe();
   }, [project.id]);
   
@@ -132,22 +152,27 @@ function ProjectDetails() {
   }
 
   // 평점 변경 처리 함수
-  const handleRatingChange = (projectId, newRating) => {
-    const projectRatingsRef = db.collection('projectRatings').doc(projectId);
-    // 기존 데이터를 가져와서 새로운 평점을 추가합니다.
-    projectRatingsRef.get().then(doc => {
+  const handleRatingChange = async (projectId, newRating) => {
+    const projectRatingsRef = doc(collection(db, 'projectRatings'), projectId);
+    
+    try {
+      const docSnap = await getDoc(projectRatingsRef);
       let updatedRatings = [];
-      if (doc.exists) {
-        updatedRatings = [...doc.data().ratings, newRating];
+      
+      if (docSnap.exists()) {
+        updatedRatings = [...(docSnap.data().ratings || []), newRating];
       } else {
         updatedRatings = [newRating];
       }
-      projectRatingsRef.set({ ratings: updatedRatings });
-    });
+      
+      await setDoc(projectRatingsRef, { ratings: updatedRatings });
+    } catch (error) {
+      console.error("Error updating rating: ", error);
+    }
   };
 
   // 댓글 추가 처리 함수
-  const handleAddComment = (e) => {
+  const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
@@ -161,39 +186,49 @@ function ProjectDetails() {
       timestamp,
     };
 
-    const projectCommentsRef = db.collection('projectComments').doc(project.id);
-    projectCommentsRef.get().then(doc => {
+    const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
+    
+    try {
+      const docSnap = await getDoc(projectCommentsRef);
       let updatedComments = [];
-      if (doc.exists) {
-        updatedComments = [...doc.data().comments, newCommentObj];
+      
+      if (docSnap.exists()) {
+        updatedComments = [...(docSnap.data().comments || []), newCommentObj];
       } else {
         updatedComments = [newCommentObj];
       }
-      projectCommentsRef.set({ comments: updatedComments });
-    });
+      
+      await setDoc(projectCommentsRef, { comments: updatedComments });
 
-    // 입력 필드 초기화
-    setNewComment('');
-    setCommentAuthor('');
+      // 입력 필드 초기화
+      setNewComment('');
+      setCommentAuthor('');
+    } catch (error) {
+      console.error("Error adding comment: ", error);
+    }
   };
 
-
   // 댓글 삭제 처리 함수
-  const handleDeleteComment = (commentId) => {
+  const handleDeleteComment = async (commentId) => {
     if (window.confirm('댓글을 삭제하시겠습니까?')) {
-      const projectCommentsRef = db.collection('projectComments').doc(project.id);
-      projectCommentsRef.get().then(doc => {
-        if (doc.exists) {
-          const updatedComments = doc.data().comments.filter(comment => comment.id !== commentId);
-          projectCommentsRef.set({ comments: updatedComments });
+      const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
+      
+      try {
+        const docSnap = await getDoc(projectCommentsRef);
+        if (docSnap.exists()) {
+          const updatedComments = (docSnap.data().comments || [])
+            .filter(comment => comment.id !== commentId);
+          
+          await setDoc(projectCommentsRef, { comments: updatedComments });
         }
-      });
+      } catch (error) {
+        console.error("Error deleting comment: ", error);
+      }
     }
   };
 
   // 사용자 평점 계산
-  const userRating = ratings[project.id] ? 
-    ratings[project.id][ratings[project.id].length - 1] : 0;
+  const userRating = ratings.length > 0 ? ratings[ratings.length - 1] : 0;
   
   // 프로젝트 상세 페이지 UI
   return (
@@ -205,7 +240,7 @@ function ProjectDetails() {
         <div className="game-instructions">
           <div className="instruction-box">
             <h2>게임 방법</h2>
-            <p>{formatTextWithLineBreaks(project.how)}</p> {/* 줄 바꿈 적용 */}
+            <p>{formatTextWithLineBreaks(project.how)}</p>
           </div>
           
           <div className="game-info">
@@ -231,7 +266,7 @@ function ProjectDetails() {
           <p className="game-description">{project.description}</p>
         </div>
       
-      {/* 오른쪽 - 평점 및 댓글 화면면 */}
+      {/* 오른쪽 - 평점 및 댓글 화면 */}
         <div className="ratings-comments-wrapper">
           <div className="ratings-comments">
             <div className="rating-container">
@@ -271,8 +306,8 @@ function ProjectDetails() {
               
               {/* 댓글 리스트 */}
               <div className="comments-list">
-                {comments[project.id] && comments[project.id].length > 0 ? (
-                  comments[project.id].map(comment => (
+                {comments.length > 0 ? (
+                  comments.map(comment => (
                     <div key={comment.id} className="comment-item">
                       <div className="comment-header">
                         <strong>{comment.author}</strong>
@@ -413,21 +448,24 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
   const [hover, setHover] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
 
-  // 별점 클릭 이벤트 처리 함수
+  // 🔄 props로 받은 초기값이 바뀌면 상태에 반영 (예: Firestore 업데이트 시)
+  useEffect(() => {
+    setRating(initialRating);
+  }, [initialRating]);
+
+  // ⭐ 별 클릭 이벤트
   const handleClick = (starValue) => {
-    setRating(starValue);
-    onRatingChange(projectId, starValue);
-    setShowPopup(true);
-    
-    // 1초 후에 팝업을 자동으로 닫고 별점 UI 초기화
+    setRating(starValue); // 바로 화면에 반영
+    onRatingChange(projectId, starValue); // 외부로 전달 (Firestore 저장)
+    setShowPopup(true); // 팝업 보여주기
+
+    // 1초 후 팝업만 닫기 (별점은 유지)
     setTimeout(() => {
       setShowPopup(false);
-      setRating(0);
-      setHover(0);
     }, 1000);
   };
 
-  // 별점 UI
+  // ⭐ 별 UI 렌더링
   return (
     <div>
       <div className="star-rating">
@@ -446,7 +484,7 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
           );
         })}
       </div>
-      
+
       {showPopup && (
         <div className="rating-popup">
           평가가 완료되었습니다!
@@ -455,6 +493,7 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
     </div>
   );
 }
+
 
 // App
 function App() {
