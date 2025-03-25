@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { db } from './firebase';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import projectsData from './projects.json';
 import './App.css';
@@ -82,16 +83,45 @@ function ProjectDetails() {
   const project = projectsData.find(p => p.id === projectName);
   
   // 평점 상태 관리
-  const [ratings, setRatings] = useState(() => {
-    const storedRatings = localStorage.getItem('projectRatings');
-    return storedRatings ? JSON.parse(storedRatings) : {};
-  });
+  const [ratings, setRatings] = useState([]);
+
+  useEffect(() => {
+    // Firestore의 'projectRatings' 컬렉션에서 해당 프로젝트 문서를 구독합니다.
+    const unsubscribe = db
+      .collection('projectRatings')
+      .doc(project.id)
+      .onSnapshot(doc => {
+        if (doc.exists) {
+          setRatings(doc.data().ratings);
+        } else {
+          setRatings([]);
+        }
+      });
+    return () => unsubscribe();
+  }, [project.id]);
+
+  const getAverageRating = () => {
+    if (ratings.length === 0) return "0.0";
+    const sum = ratings.reduce((acc, cur) => acc + cur, 0);
+    return (sum / ratings.length).toFixed(1);
+  };
   
   // 댓글 시스템 상태 관리
-  const [comments, setComments] = useState(() => {
-    const storedComments = localStorage.getItem('projectComments');
-    return storedComments ? JSON.parse(storedComments) : {};
-  });
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = db
+      .collection('projectComments')
+      .doc(project.id)
+      .onSnapshot(doc => {
+        if (doc.exists) {
+          setComments(doc.data().comments);
+        } else {
+          setComments([]);
+        }
+      });
+    return () => unsubscribe();
+  }, [project.id]);
   
   // 댓글 입력 필드 상태 관리
   const [newComment, setNewComment] = useState('');
@@ -103,54 +133,61 @@ function ProjectDetails() {
 
   // 평점 변경 처리 함수
   const handleRatingChange = (projectId, newRating) => {
-    const updatedRatings = {
-      ...ratings,
-      [projectId]: [...(ratings[projectId] || []), newRating]
-    };
-    
-    setRatings(updatedRatings);
-    localStorage.setItem('projectRatings', JSON.stringify(updatedRatings));
+    const projectRatingsRef = db.collection('projectRatings').doc(projectId);
+    // 기존 데이터를 가져와서 새로운 평점을 추가합니다.
+    projectRatingsRef.get().then(doc => {
+      let updatedRatings = [];
+      if (doc.exists) {
+        updatedRatings = [...doc.data().ratings, newRating];
+      } else {
+        updatedRatings = [newRating];
+      }
+      projectRatingsRef.set({ ratings: updatedRatings });
+    });
   };
 
   // 댓글 추가 처리 함수
   const handleAddComment = (e) => {
     e.preventDefault();
-    
     if (!newComment.trim()) return;
-    
+
     const author = commentAuthor.trim() || '익명';
     const timestamp = new Date().toISOString();
-    
+
     const newCommentObj = {
       id: Date.now(),
       author,
       text: newComment,
-      timestamp
+      timestamp,
     };
-    
-    const updatedComments = {
-      ...comments,
-      [project.id]: [...(comments[project.id] || []), newCommentObj]
-    };
-    
-    setComments(updatedComments);
-    localStorage.setItem('projectComments', JSON.stringify(updatedComments));
-    
+
+    const projectCommentsRef = db.collection('projectComments').doc(project.id);
+    projectCommentsRef.get().then(doc => {
+      let updatedComments = [];
+      if (doc.exists) {
+        updatedComments = [...doc.data().comments, newCommentObj];
+      } else {
+        updatedComments = [newCommentObj];
+      }
+      projectCommentsRef.set({ comments: updatedComments });
+    });
+
     // 입력 필드 초기화
     setNewComment('');
     setCommentAuthor('');
   };
 
+
   // 댓글 삭제 처리 함수
   const handleDeleteComment = (commentId) => {
     if (window.confirm('댓글을 삭제하시겠습니까?')) {
-      const updatedComments = {
-        ...comments,
-        [project.id]: (comments[project.id] || []).filter(comment => comment.id !== commentId)
-      };
-      
-      setComments(updatedComments);
-      localStorage.setItem('projectComments', JSON.stringify(updatedComments));
+      const projectCommentsRef = db.collection('projectComments').doc(project.id);
+      projectCommentsRef.get().then(doc => {
+        if (doc.exists) {
+          const updatedComments = doc.data().comments.filter(comment => comment.id !== commentId);
+          projectCommentsRef.set({ comments: updatedComments });
+        }
+      });
     }
   };
 
