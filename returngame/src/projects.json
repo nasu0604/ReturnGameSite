@@ -6,6 +6,7 @@
       "imagePath": "/unity/tetro-mok/tetro-mok.png",
       "iframeSrc": "/unity/tetro-mok/index.html",
       "concept": "공포",
+      "difficulty": 5,
       "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
     },
     {

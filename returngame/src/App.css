@@ -100,7 +100,6 @@ h1 {
 
 h2 {
   font-weight: 500;
-  margin-bottom: 10px;
 }
 
 h3 {
@@ -325,7 +324,7 @@ iframe {
 }
 
 .comments-section {
-  margin-top: 20px;
+  margin-top: 10px;
   border-top: 1px solid #eee;
   width: 100%;
 }
@@ -424,7 +423,10 @@ iframe {
   text-align: center;
   color: #999;
   font-style: italic;
-  padding: 20px;
+  font-size: 14px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-bottom: 20px;
 }
 
 .project-layout {
@@ -445,25 +447,28 @@ iframe {
 }
 
 .instruction-box {
-  background-color: white;
-  border: 1px solid #eee;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
   border-radius: 10px;
   padding: 15px;
   margin-top: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .instruction-box p {
-  margin-bottom: 10px;
   text-align: left;
-  line-height: 1.5;
+  line-height: 1.8;
 }
 
 .game-info {
-  background-color: white;
-  border: 1px solid #eee;
-  border-radius: 8px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc; 
+  border-radius: 10px;
   padding: 15px;
+}
+
+p{
+  margin-top: 10px;
 }
 
 .game-info p {
@@ -499,6 +504,7 @@ iframe {
 }
 
 .game-description {
+  background-color: #f9f9f9;
   margin-top: 15px;
   margin-bottom: 15px;
   text-align: center;
@@ -507,6 +513,8 @@ iframe {
 
 .ratings-comments {
   background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  margin-top: 10px;
   border-radius: 10px;
   padding-left:20px;
   padding-right:20px;
@@ -521,7 +529,8 @@ iframe {
 
 .comments-section {
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: 0px;
+  border-color: #ddd;
   padding-top:20px;
 }
 

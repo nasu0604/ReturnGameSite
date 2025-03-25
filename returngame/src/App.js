@@ -15,7 +15,7 @@ function Home() {
 // 프로젝트 리스트 페이지
 function Project() {
   // 평점 상태 관리
-  const [ratings, setRatings] = useState(() => {
+  const [ratings] = useState(() => {
     const storedRatings = localStorage.getItem('projectRatings');
     return storedRatings ? JSON.parse(storedRatings) : {};
   });
@@ -173,8 +173,8 @@ function ProjectDetails() {
           
           <div className="game-info">
             <h2>게임 정보</h2>
-            <p><strong>장르:</strong> 보드 게임</p>
-            <p><strong>난이도:</strong> 초급자 ~ 중급자</p>
+            <p><strong>장르:</strong> {project.concept}</p>
+            <p><strong>난이도:</strong> {project.difficulty}</p>
             <p><strong>개발자:</strong> return Game;</p>
             <p><strong>버전:</strong> 1.0</p>
           </div>
@@ -198,7 +198,7 @@ function ProjectDetails() {
         <div className="ratings-comments-wrapper">
           <div className="ratings-comments">
             <div className="rating-container">
-              <h2>평가하기</h2>
+              <h2>평가</h2>
               <StarRating 
                 projectId={project.id} 
                 initialRating={userRating}
@@ -254,7 +254,7 @@ function ProjectDetails() {
                     </div>
                   ))
                 ) : (
-                  <p className="no-comments">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
+                  <p className="no-comments">아직 댓글이 없습니다.<br/> 첫 댓글을 남겨보세요!</p>
                 )}
               </div>
             </div>
