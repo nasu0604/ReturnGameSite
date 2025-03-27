@@ -76,7 +76,7 @@ function Project() {
                   <div className="project-rating">★ {getAverageRating(project.id)}</div>
                 </div>
                 <div className="project-text-row">
-                  <div className="project-subtitle">test</div>
+                  <div className="project-subtitle">{project.main_desc}</div>
                   <div className="project-concept">{project.concept}</div>
                 </div>
               </div>
@@ -116,17 +116,6 @@ function ProjectDetails() {
     });
     return () => unsubscribe();
   }, [project.id]);
-
-  const getAverageRating = () => {
-    if (ratings.length === 0) {
-      // 평점이 없는 경우 프로젝트의 기본 평점 반환
-      return project.rating ? project.rating.toFixed(1) : "0.0";
-    }
-    
-    // 현재 평점들의 평균 계산
-    const averageRating = ratings.reduce((acc, cur) => acc + cur, 0) / ratings.length;
-    return averageRating.toFixed(1);
-  };
   
   // 댓글 시스템 상태 관리
   const [comments, setComments] = useState([]);
@@ -247,9 +236,16 @@ function ProjectDetails() {
           <div className="game-info">
             <h2>게임 정보</h2>
             <p><strong>장르:</strong> {project.concept}</p>
-            <p><strong>난이도:</strong> {project.difficulty}</p>
-            <p><strong>개발자:</strong> return Game;</p>
-            <p><strong>버전:</strong> 1.0</p>
+            <p>
+              <strong>난이도:</strong>
+              {[...Array(5)].map((_, index) => (
+                <span key={index} style={{ marginLeft: '5px' }}>
+                  {index < project.difficulty ? '★' : '☆'}
+                </span>
+              ))}
+            </p>
+            <p><strong>개발자:</strong> {project.developer}</p>
+            <p><strong>개발연도:</strong> {project.date}</p>
           </div>
         </div>
         
@@ -313,7 +309,7 @@ function ProjectDetails() {
                       <div className="comment-header">
                         <strong>{comment.author}</strong>
                         <span className="comment-date">
-                          {new Date(comment.timestamp).toLocaleDateString()} 
+                          {new Date(comment.timestamp).toLocaleDateString()}
                           {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "770768803579",
+    "firebase_url": "https://returngame-d8a65-default-rtdb.firebaseio.com",
+    "project_id": "returngame-d8a65",
+    "storage_bucket": "returngame-d8a65.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:770768803579:android:ff24f726cb8eea9727025e",
+        "android_client_info": {
+          "package_name": "com.return.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiLPTgZUDHC2_2xgNfDA0aD-tCMRovZ_E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
