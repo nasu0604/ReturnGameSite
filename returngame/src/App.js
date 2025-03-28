@@ -394,7 +394,7 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-title">
-        <img src="/logo.png" alt="logo" className="logo" />
+        <img src="/logo_long.png" alt="logo" className="logo" />
       </div>
       <div className="navbar-links">
         <Link
