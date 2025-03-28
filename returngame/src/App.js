@@ -58,7 +58,6 @@ function Project() {
   // UI 렌더링
   return (
     <div className="page-container">
-      <h1>프로젝트 리스트</h1>
       <ul>
         {projectsData.map((project) => (
           <li key={project.id}>
@@ -223,12 +222,12 @@ function ProjectDetails() {
   // 가장 최근 평점을 사용자 평점으로 표시
   const userRating = ratings.length > 0 ? ratings[ratings.length - 1] : 0;
 
+  // 프로젝트 상세 페이지 UI
   return (
-    <div className="page-container">
-      <h1>{project.name}</h1>
+    <div className="page-container">  
 
       <div className="project-layout">
-        {/* 왼쪽: 게임 방법 / 정보 */}
+        {/* 왼쪽: 게임 방법 및 게임 정보 */}
         <div className="game-instructions">
           <div className="instruction-box">
             <h2>게임 방법</h2>
@@ -256,7 +255,7 @@ function ProjectDetails() {
           </div>
         </div>
 
-        {/* 중앙: 게임 iframe */}
+        {/* 중앙: 게임 플레이 */}
         <div className="game-container">
           <div className="game-frame-wrapper">
             <iframe
@@ -270,7 +269,7 @@ function ProjectDetails() {
           <p className="game-description">{project.description}</p>
         </div>
 
-        {/* 오른쪽: 평점 / 댓글 */}
+        {/* 오른쪽: 평점 및 댓글 */}
         <div className="ratings-comments-wrapper">
           <div className="ratings-comments">
             <div className="rating-container">
@@ -286,7 +285,6 @@ function ProjectDetails() {
               <h2>댓글</h2>
               {/* 댓글 입력 폼 */}
               <form onSubmit={handleAddComment} className="comment-form">
-                {/* 이름 / 비밀번호를 같은 줄에 */}
                 <div className="horizontal-inputs">
                   <input
                     type="text"
@@ -473,24 +471,24 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
   const [hover, setHover] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
 
-  // 🔄 props로 받은 초기값이 바뀌면 상태에 반영 (예: Firestore 업데이트 시)
+  // 받은 초기값이 바뀌면 상태 반영
   useEffect(() => {
     setRating(initialRating);
   }, [initialRating]);
 
-  // ⭐ 별 클릭 이벤트
+  // 별 클릭 이벤트
   const handleClick = (starValue) => {
-    setRating(starValue); // 바로 화면에 반영
-    onRatingChange(projectId, starValue); // 외부로 전달 (Firestore 저장)
-    setShowPopup(true); // 팝업 보여주기
+    setRating(starValue);
+    onRatingChange(projectId, starValue); // firestore에 저장
+    setShowPopup(true);
 
-    // 1초 후 팝업만 닫기 (별점은 유지)
+    // 1초 후 팝업 닫기
     setTimeout(() => {
       setShowPopup(false);
     }, 1000);
   };
 
-  // ⭐ 별 UI 렌더링
+  // 평점 UI
   return (
     <div>
       <div className="star-rating">
