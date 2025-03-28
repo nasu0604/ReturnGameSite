@@ -96,146 +96,149 @@ const formatTextWithLineBreaks = (text) => {
 
 // 프로젝트 상세 페이지
 function ProjectDetails() {
-  // URL 파라미터로 프로젝트 이름 가져오기
+  // URL 파라미터로 프로젝트 식별자 가져오기
   const { projectName } = useParams();
-  const project = projectsData.find(p => p.id === projectName);
-  
+  const project = projectsData.find((p) => p.id === projectName);
+
   // 평점 상태 관리
   const [ratings, setRatings] = useState([]);
-
   useEffect(() => {
-    // 최신 Firebase 방식으로 업데이트된 Firestore 구독 메서드
     const projectRatingsRef = doc(collection(db, 'projectRatings'), project.id);
-    const unsubscribe = onSnapshot(projectRatingsRef, (doc) => {
-      if (doc.exists()) {
-        console.log("받은 평점 데이터:", doc.data().ratings);
-        setRatings(doc.data().ratings || []);
+    const unsubscribe = onSnapshot(projectRatingsRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setRatings(docSnap.data().ratings || []);
       } else {
         setRatings([]);
       }
     });
     return () => unsubscribe();
   }, [project.id]);
-  
-  // 댓글 시스템 상태 관리
-  const [comments, setComments] = useState([]);
 
+  // 댓글 상태 관리
+  const [comments, setComments] = useState([]);
   useEffect(() => {
-    // 최신 Firebase 방식으로 업데이트된 Firestore 구독 메서드
     const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
-    const unsubscribe = onSnapshot(projectCommentsRef, (doc) => {
-      if (doc.exists()) {
-        setComments(doc.data().comments || []);
+    const unsubscribe = onSnapshot(projectCommentsRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setComments(docSnap.data().comments || []);
       } else {
         setComments([]);
       }
     });
     return () => unsubscribe();
   }, [project.id]);
-  
-  // 댓글 입력 필드 상태 관리
+
+  // 댓글 입력 폼 상태
   const [newComment, setNewComment] = useState('');
   const [commentAuthor, setCommentAuthor] = useState('');
+  const [commentPassword, setCommentPassword] = useState('');
 
   if (!project) {
     return <div>프로젝트를 찾을 수 없습니다.</div>;
   }
 
-  // 평점 변경 처리 함수
+  // 평점 변경 처리
   const handleRatingChange = async (projectId, newRating) => {
     const projectRatingsRef = doc(collection(db, 'projectRatings'), projectId);
-    
     try {
       const docSnap = await getDoc(projectRatingsRef);
       let updatedRatings = [];
-      
       if (docSnap.exists()) {
         updatedRatings = [...(docSnap.data().ratings || []), newRating];
       } else {
         updatedRatings = [newRating];
       }
-      
       await setDoc(projectRatingsRef, { ratings: updatedRatings });
     } catch (error) {
-      console.error("Error updating rating: ", error);
+      console.error('Error updating rating: ', error);
     }
   };
 
-  // 댓글 추가 처리 함수
+  // 댓글 작성
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
-  
+    if (!newComment.trim() || !commentPassword.trim()) {
+      alert('댓글과 비밀번호를 모두 입력해주세요.');
+      return;
+    }
+
     const author = commentAuthor.trim() || '익명';
     const timestamp = new Date().toISOString();
-  
+
     const newCommentObj = {
       id: Date.now(),
       author,
       text: newComment,
       timestamp,
+      password: commentPassword, // 비밀번호 저장
     };
-  
+
     const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
-  
+
     try {
-      // 문서가 없으면 미리 생성
       const docSnap = await getDoc(projectCommentsRef);
       if (!docSnap.exists()) {
         await setDoc(projectCommentsRef, { comments: [] });
       }
-  
-      // 새 댓글 추가 (병합 방식)
       await updateDoc(projectCommentsRef, {
-        comments: arrayUnion(newCommentObj)
+        comments: arrayUnion(newCommentObj),
       });
-  
+
       // 입력 필드 초기화
       setNewComment('');
       setCommentAuthor('');
+      setCommentPassword('');
     } catch (error) {
-      console.error("Error adding comment: ", error);
+      console.error('Error adding comment: ', error);
     }
   };
 
-  // 댓글 삭제 처리 함수
+  // 댓글 삭제
   const handleDeleteComment = async (commentId) => {
-    if (window.confirm('댓글을 삭제하시겠습니까?')) {
+    const commentToDelete = comments.find((c) => c.id === commentId);
+    if (!commentToDelete) return;
+
+    const inputPassword = prompt('댓글을 삭제하시려면 비밀번호를 입력하세요:');
+    if (inputPassword !== commentToDelete.password) {
+      alert('비밀번호가 틀렸습니다.');
+      return;
+    }
+
+    if (window.confirm('정말로 댓글을 삭제하시겠습니까?')) {
       const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
-      
       try {
         const docSnap = await getDoc(projectCommentsRef);
         if (docSnap.exists()) {
-          const updatedComments = (docSnap.data().comments || [])
-            .filter(comment => comment.id !== commentId);
-          
+          const updatedComments = (docSnap.data().comments || []).filter(
+            (comment) => comment.id !== commentId
+          );
           await setDoc(projectCommentsRef, { comments: updatedComments });
         }
       } catch (error) {
-        console.error("Error deleting comment: ", error);
+        console.error('Error deleting comment: ', error);
       }
     }
   };
 
-  // 사용자 평점 계산
+  // 가장 최근 평점을 사용자 평점으로 표시
   const userRating = ratings.length > 0 ? ratings[ratings.length - 1] : 0;
-  
-  // 프로젝트 상세 페이지 UI
+
   return (
     <div className="page-container">
       <h1>{project.name}</h1>
-      
+
       <div className="project-layout">
-        {/* 왼쪽 - 게임 설명 */}
+        {/* 왼쪽: 게임 방법 / 정보 */}
         <div className="game-instructions">
           <div className="instruction-box">
             <h2>게임 방법</h2>
             <p>{formatTextWithLineBreaks(project.how)}</p>
           </div>
-          
           <div className="game-info">
             <h2>게임 정보</h2>
-            <p><strong>장르:</strong> {project.concept}</p>
+            <p>
+              <strong>장르:</strong> {project.concept}
+            </p>
             <p>
               <strong>난이도:</strong>
               {[...Array(5)].map((_, index) => (
@@ -244,12 +247,16 @@ function ProjectDetails() {
                 </span>
               ))}
             </p>
-            <p><strong>개발자:</strong> {project.developer}</p>
-            <p><strong>개발연도:</strong> {project.date}</p>
+            <p>
+              <strong>개발자:</strong> {project.developer}
+            </p>
+            <p>
+              <strong>개발연도:</strong> {project.date}
+            </p>
           </div>
         </div>
-        
-        {/* 중앙 - 게임 화면 */}
+
+        {/* 중앙: 게임 iframe */}
         <div className="game-container">
           <div className="game-frame-wrapper">
             <iframe
@@ -262,33 +269,43 @@ function ProjectDetails() {
           </div>
           <p className="game-description">{project.description}</p>
         </div>
-      
-      {/* 오른쪽 - 평점 및 댓글 화면 */}
+
+        {/* 오른쪽: 평점 / 댓글 */}
         <div className="ratings-comments-wrapper">
           <div className="ratings-comments">
             <div className="rating-container">
               <h2>평가</h2>
-              <StarRating 
-                projectId={project.id} 
+              <StarRating
+                projectId={project.id}
                 initialRating={userRating}
                 onRatingChange={handleRatingChange}
               />
             </div>
-            
+
             <div className="comments-section">
               <h2>댓글</h2>
-              
               {/* 댓글 입력 폼 */}
               <form onSubmit={handleAddComment} className="comment-form">
-                <div className="input-group">
+                {/* 이름 / 비밀번호를 같은 줄에 */}
+                <div className="horizontal-inputs">
                   <input
                     type="text"
                     value={commentAuthor}
                     onChange={(e) => setCommentAuthor(e.target.value)}
-                    placeholder="이름 (선택사항)"
+                    placeholder="닉네임"
                     className="author-input"
                   />
+                  <input
+                    type="password"
+                    value={commentPassword}
+                    onChange={(e) => setCommentPassword(e.target.value)}
+                    placeholder="비밀번호"
+                    className="password-input"
+                    required
+                  />
                 </div>
+
+                {/* 댓글 내용 */}
                 <div className="input-group">
                   <textarea
                     value={newComment}
@@ -298,24 +315,30 @@ function ProjectDetails() {
                     required
                   />
                 </div>
-                <button type="submit" className="comment-submit-btn">댓글 작성</button>
+
+                <button type="submit" className="comment-submit-btn">
+                  댓글 작성
+                </button>
               </form>
-              
+
               {/* 댓글 리스트 */}
               <div className="comments-list">
                 {comments.length > 0 ? (
-                  comments.map(comment => (
+                  comments.map((comment) => (
                     <div key={comment.id} className="comment-item">
                       <div className="comment-header">
                         <strong>{comment.author}</strong>
                         <span className="comment-date">
-                          {new Date(comment.timestamp).toLocaleDateString()}
-                          {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(comment.timestamp).toLocaleDateString()}{' '}
+                          {new Date(comment.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </span>
                       </div>
                       <p className="comment-text">{comment.text}</p>
-                      <button 
-                        onClick={() => handleDeleteComment(comment.id)} 
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
                         className="delete-comment-btn"
                       >
                         삭제
@@ -323,7 +346,11 @@ function ProjectDetails() {
                     </div>
                   ))
                 ) : (
-                  <p className="no-comments">아직 댓글이 없습니다.<br/> 첫 댓글을 남겨보세요!</p>
+                  <p className="no-comments">
+                    아직 댓글이 없습니다.
+                    <br />
+                    첫 댓글을 남겨보세요!
+                  </p>
                 )}
               </div>
             </div>
@@ -333,6 +360,7 @@ function ProjectDetails() {
     </div>
   );
 }
+
 
 // 소개 페이지
 function Introduce() {

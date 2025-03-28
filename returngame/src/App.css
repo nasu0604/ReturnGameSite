@@ -337,7 +337,7 @@ iframe {
 }
 
 
-.author-input {
+.author-input, .password-input {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -542,4 +542,15 @@ p{
 
 strong {
   text-align: left
+}
+
+.horizontal-inputs {
+  display: flex;
+  gap: 10px;
+  display: grid;
+  grid-template-columns: 1.5fr 2fr;
+}
+
+.horizontal-inputs input {
+  flex: 1;
 }
