@@ -3,6 +3,7 @@ import { db, collection, doc, getDoc, setDoc, onSnapshot } from './firebase';
 import { updateDoc, arrayUnion } from 'firebase/firestore';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import projectsData from './projects.json';
+import timelineData from './timelineData.json';
 import './App.css';
 
 // 메인 페이지
@@ -358,12 +359,53 @@ function ProjectDetails() {
   );
 }
 
+// 타임라인 컴포넌트
+function Timeline() {
+  const [expandedItems, setExpandedItems] = useState({});
+
+  const toggleItem = (id) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  return (
+    <div className="timeline-container">
+      <div className="timeline-line"></div>
+      {timelineData.map((item, index) => (
+        <div 
+          key={item.id} 
+          className={`timeline-item ${index % 2 === 0 ? 'left' : 'right'} ${expandedItems[item.id] ? 'expanded' : ''}`}
+          onClick={() => toggleItem(item.id)}
+        >
+          <div className="timeline-dot"></div>
+          <div className="timeline-content">
+            <div className="timeline-year">{item.year}</div>
+            <h3 className="timeline-title">{item.title}</h3>
+            <p className="timeline-short-desc">{item.shortDesc}</p>
+            <div className="timeline-details">
+              <img 
+                src={item.image} 
+                alt={item.title} 
+                className="timeline-image"
+                onError={(e) => {e.target.src = '/api/placeholder/400/300'; e.target.alt = 'Placeholder image'}}
+              />
+              <p className="timeline-long-desc">{formatTextWithLineBreaks(item.longDesc)}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // 소개 페이지
 function Introduce() {
-  // 소개 페이지 UI
   return (
     <div className="page-container">
       <h1>우리는 return Game;입니다</h1>
+      <Timeline />
     </div>
   );
 }
