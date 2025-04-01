@@ -87,7 +87,6 @@ function Project() {
   );
 }
 
-
 // 텍스트 줄 바꿈 적용 함수
 const formatTextWithLineBreaks = (text) => {
   return text.split('\n').map((line, index) => <span key={index}>{line}<br /></span>);
@@ -142,14 +141,14 @@ function ProjectDetails() {
     try {
       const docSnap = await getDoc(projectRatingsRef);
       let updatedRatings = [];
-      if (docSnap.exists()) {
+      if (docSnap.exists()) { 
         updatedRatings = [...(docSnap.data().ratings || []), newRating];
       } else {
         updatedRatings = [newRating];
       }
       await setDoc(projectRatingsRef, { ratings: updatedRatings });
     } catch (error) {
-      console.error('Error updating rating: ', error);
+      console.error('평점 갱신 중 오류 발생: ', error);
     }
   };
 
@@ -169,7 +168,7 @@ function ProjectDetails() {
       author,
       text: newComment,
       timestamp,
-      password: commentPassword, // 비밀번호 저장
+      password: commentPassword,
     };
 
     const projectCommentsRef = doc(collection(db, 'projectComments'), project.id);
@@ -359,7 +358,6 @@ function ProjectDetails() {
   );
 }
 
-
 // 소개 페이지
 function Introduce() {
   // 소개 페이지 UI
@@ -516,7 +514,6 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
     </div>
   );
 }
-
 
 // App
 function App() {

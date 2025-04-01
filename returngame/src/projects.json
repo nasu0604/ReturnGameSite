@@ -2,14 +2,14 @@
     {
       "id": "tetro-mok",
       "name": "Tetro-Mok",
-      "main_desc": "오목과 테트리스를 합쳐 즐기세요!",
+      "main_desc": "테트리스와 오목을 결합한 퓨전 보드게임!",
       "imagePath": "/unity/tetro-mok/tetro-mok.png",
       "iframeSrc": "/unity/tetro-mok/index.html",
       "concept": "아케이드",
       "difficulty": 3,
-      "developer": "rG",
+      "developer": "sukonnbu",
       "date":2025,
-      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
+      "how": "1. 흑과 백이 번갈아서 무작위로 주어지는 트리미노 형태의 돌을 회전하며 배치한다.\n2. 같은 색의 돌이 10개 이상 이어지면 해당 플레이어는 10점을 얻고 그 줄이 지워진다.\n3. 1/15 학률로 생성되는 보너스 돌은 두 플레이어 모두 이용 가능하며, 해당 돌을 포함해 연결할 때 마다 3점을 추가로 얻는다.\n4. 두 플레이어가 모두 동의하면 게임 종료가 선언되고, 점수를 추가로 산정한다.\n5. 게임 종료 시 같은 색의 돌이 5개 이상 연결되어 있으면 5점을 얻으며, 보너스 돌의 효과 또한 받는다.\n6. 최종 점수가 더 높은 플레이어가 승리한다."
     },
     {
       "id": "rG_A",
@@ -19,9 +19,9 @@
       "iframeSrc": "/unity/rG_A/index.html",
       "concept": "퍼즐",
       "difficulty": 4,
-      "developer": "rG_A Team",
+      "developer": "LOOPARAM / Yangnyom",
       "date":2024,
-      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
+      "how": "1. 머리, 몸, 화살을 따로 조작하며 기믹을 활용해 게임을 클리어하자!\n2. 특정 버튼은 특정 문과 연결되어 있다!\n3. 머리와 몸이 결합된 상태여야 스테이지가 클리어 된다!\n4. 분쇄기에 머리나 몸의 발이 닿으면 스테이지 실패!\n5. 화살을 파괴시킬 수 있는 타일이 있으니 조심할 것!"
     },
     {
       "id": "rG_B",
@@ -31,9 +31,9 @@
       "iframeSrc": "/unity/rG_B/index.html",
       "concept": "탈출",
       "difficulty": 3,
-      "developer": "rG_B Team",
+      "developer": "berryprince30 / 20617chaehun / Jooniornaver / LOOPARAM / sinjihong08",
       "date":2024,
-      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
+      "how": "(작성중)"
     },
     {
       "id": "rG_D",
@@ -43,11 +43,10 @@
       "iframeSrc": "/unity/rG_D/index.html",
       "concept": "키우기",
       "difficulty": 1,
-      "developer": "rG_D Team",
+      "developer": "MGL0526 / yeongjibro",
       "date":2024,
-      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
-    }
-    ,
+      "how": "Copyright © Goldmetal"
+    },
     {
       "id": "rG_E",
       "name": "illusio",
@@ -56,8 +55,8 @@
       "iframeSrc": "/unity/rG_E/index.html",
       "concept": "생존",
       "difficulty": 3,
-      "developer": "rG_E Team",
+      "developer": "berryprince30 / mugglewoojin / LOOPARAM",
       "date":2024,
-      "how": "1. 게임판에 돌을 놓으려면 교차점을 클릭하세요!\n 2. 가로, 세로, 또는 대각선으로 5개의 돌을 연속으로 놓는 사람이 승리합니다.\n3. 검은색이 먼저 시작합니다.\n4. 게임 중간에 상대방의 돌을 제거할 수 없습니다.\n5. 모든 교차점에 돌이 놓여도 승자가 없으면 무승부입니다."
+      "how": "(작성중)"
     }
   ]
