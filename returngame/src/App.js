@@ -6,11 +6,49 @@ import projectsData from './projects.json';
 import timelineData from './timelineData.json';
 import './App.css';
 
+// 줄바꿈 함수
+const formatTextWithLineBreaks = (text) => {
+  const regex = /(\{[^}]+\})/g;
+  return text.split(regex).map((segment, index) => {
+    if (regex.test(segment)) {
+      return <span key={index} className="gray-text">{segment}</span>;
+    }
+    const lines = segment.split('\n');
+    return (
+      <span key={index}>
+        {lines.map((line, i) => (
+          <React.Fragment key={i}>
+            {line}
+            {i < lines.length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </span>
+    );
+  });
+};
+
 // 메인 페이지
 function Home() {
   return (
     <div className="page-container">
-      <h1>Hello World!</h1>
+      <h1>@return Game;</h1>
+      <h5>이 사이트는 PC 환경에 최적화되어 있습니다</h5>
+      <div className="home-links">
+        <a 
+          href="https://www.instagram.com/_return_game_" 
+          className="home-link-box" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          동아리 인스타
+        </a>
+        <Link to="/project" className="home-link-box">
+          프로젝트
+        </Link>
+        <Link to="/introduce" className="home-link-box">
+          소개
+        </Link>
+      </div>
     </div>
   );
 }
@@ -87,11 +125,6 @@ function Project() {
     </div>
   );
 }
-
-// 텍스트 줄 바꿈 적용 함수
-const formatTextWithLineBreaks = (text) => {
-  return text.split('\n').map((line, index) => <span key={index}>{line}<br /></span>);
-};
 
 // 프로젝트 상세 페이지
 function ProjectDetails() {
@@ -404,7 +437,6 @@ function Timeline() {
 function Introduce() {
   return (
     <div className="page-container">
-      <h1>우리는 return Game;입니다</h1>
       <Timeline />
     </div>
   );
