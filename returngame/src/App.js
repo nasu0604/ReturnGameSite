@@ -6,6 +6,27 @@ import projectsData from './projects.json';
 import timelineData from './timelineData.json';
 import './App.css';
 
+// 사진 모달 컴포넌트
+function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
+  if (!photos || photos.length === 0) return null;
+  return (
+    <div className="photo-modal-overlay">
+      <div className="photo-modal">
+        <button className="close-button" onClick={onClose}>×</button>
+        <img
+          src={photos[currentIndex]}
+          alt={`Slide ${currentIndex + 1}`}
+          className="modal-photo"
+        />
+        <div className="modal-controls">
+          <button onClick={onPrev}>←</button>
+          <button onClick={onNext}>→</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // 줄바꿈 함수
 const formatTextWithLineBreaks = (text) => {
   const regex = /(\{[^}]+\})/g;
@@ -395,6 +416,15 @@ function ProjectDetails() {
 // 타임라인 컴포넌트
 function Timeline() {
   const [expandedItems, setExpandedItems] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  const wonderPotionPhotos = [
+    '001.png',
+    '002.png',
+    '003.png',
+    '004.png'
+  ];
 
   const toggleItem = (id) => {
     setExpandedItems(prev => ({
@@ -425,10 +455,38 @@ function Timeline() {
                 onError={(e) => {e.target.src = '/api/placeholder/400/300'; e.target.alt = 'Placeholder image'}}
               />
               <p className="timeline-long-desc">{formatTextWithLineBreaks(item.longDesc)}</p>
+              {/* id가 2인 경우 링크 추가 */}
+              {item.id === 2 && (
+                <div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setModalVisible(true);
+                    }}
+                    className="button-link"
+                  >
+                    기사 보기
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       ))}
+      {/* 팝업 컴포넌트 */}
+      {modalVisible && (
+        <PhotoModal 
+          photos={wonderPotionPhotos} 
+          currentIndex={currentPhotoIndex} 
+          onClose={() => setModalVisible(false)}
+          onPrev={() =>
+            setCurrentPhotoIndex((currentPhotoIndex - 1 + wonderPotionPhotos.length) % wonderPotionPhotos.length)
+          }
+          onNext={() =>
+            setCurrentPhotoIndex((currentPhotoIndex + 1) % wonderPotionPhotos.length)
+          }
+        />
+      )}
     </div>
   );
 }
