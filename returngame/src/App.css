@@ -1,5 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap');
 
+.kakao_ad_area iframe {
+  border-radius: 0 !important;
+}
+.kakao_ad_area {
+  overflow: visible !important;
+}
+
+.adfit-container {
+  overflow: visible;
+  border-radius: 0;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -31,7 +43,7 @@ body {
   color: white;
   padding-top: 15px;
   padding-bottom: 15px;
-  padding-left: 20px;
+  padding-left: 10px;
   padding-right: 20px;
   font-weight: 600;
   font-size: 16px;
@@ -198,7 +210,7 @@ textarea {
   font-size: 16px;
 }
 
-iframe {
+.game-iframe {
   border: 1px solid #ccc;
   margin-top: 10px;
   border-radius: 10px;
@@ -246,6 +258,10 @@ iframe {
   justify-content: space-between;
   width: 100%;
   margin-top: 10px;
+}
+
+.project-details-page {
+  padding-top: 60px;
 }
 
 .project-info {
@@ -818,4 +834,140 @@ strong {
   font: inherit;
   cursor: pointer;
   margin-left: 8px;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+
+  .navbar {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+  }
+  .navbar-title {
+    margin-bottom: 8px;
+  }
+  .navbar-links {
+    width: 100%;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .home-links {
+    gap: 12px;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .page-container {
+    padding-top: 10 !important;
+  }
+
+  ul {
+    grid-template-columns: 1fr !important;
+    row-gap: 15px;
+    padding: 0 10px;
+  }
+  ul li {
+    margin: 0;
+  }
+
+  .project-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 10px;
+  }
+  .project-details-page {
+    padding-top: 10px;
+  }
+
+  .project-details-page .adfit-container {
+    display: none !important;
+  }
+
+  .game-container { order: 1; }
+  .ratings-comments-wrapper { order: 3; }
+  .game-instructions { order: 2; }
+  .ratings-comments {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .timeline-container {
+    padding: 0 20px;
+  }
+  .timeline-line {
+    left: 20px !important;
+    transform: none !important;
+  }
+
+  .timeline-item.left{
+    padding-right: 0 !important;
+  }
+
+  .timeline-item,
+  .timeline-item.left,
+  .timeline-item.right {
+    position: relative;
+    width: 100% !important;
+    margin: 20px 0 !important;
+    padding-left: 30px !important;
+    left: 0 !important;
+    transform: none !important;
+    text-align: left !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .timeline-dot {
+    left: -8px !important;
+    transform: none !important;
+  }
+  .timeline-content {
+    width: auto !important;
+    max-width: none !important;
+    box-sizing: border-box;
+  }
+  
+  .timeline-container {
+    padding: 0 20px;
+  }
+  .photo-modal .close-button {
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    transform: none !important;
+    font-size: 2rem !important;
+    color: #fff !important;
+    padding: 8px !important;
+    border-radius: 50% !important;
+    z-index: 5002 !important;
+  }
+  .photo-modal .modal-controls {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 0 !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding: 0 20px !important;
+    transform: none !important;
+    z-index: 5002 !important;
+  }
+  .photo-modal .modal-controls button {
+    font-size: 2.5rem !important;
+    color: #fff !important;
+    padding: 8px !important;
+    border: none !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    padding-top: 150px !important;
+  }
+
+  .photo-modal .modal-controls button:first-child,
+  .photo-modal .modal-controls button:last-child {
+    transform: none !important;
+  }
+  .photo-modal .modal-controls {
+    justify-content: space-between !important;
+  }
 }

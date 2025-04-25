@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db, collection, doc, getDoc, setDoc, onSnapshot } from './firebase';
 import { updateDoc, arrayUnion } from 'firebase/firestore';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import projectsData from './projects.json';
 import timelineData from './timelineData.json';
 import './App.css';
+
 
 // 사진 모달 컴포넌트
 function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
@@ -26,6 +27,58 @@ function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
     </div>
   );
 }
+
+const AdFitBanner = ({
+  adUnit = 'DAN-cbhNH2DQGsz5BG5u',
+  width = 728,
+  height = 90
+}) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    // 기존 광고 요소 제거
+    ref.current.innerHTML = '';
+
+    // 광고 ins 요소 생성 및 속성 설정
+    const ins = document.createElement('ins');
+    ins.className = 'kakao_ad_area';
+    ins.style.display = 'inline-block';
+    ins.style.width  = `${width}px`;
+    ins.style.height = `${height}px`;
+    ins.setAttribute('data-ad-unit', adUnit);
+    ins.setAttribute('data-ad-width', String(width));
+    ins.setAttribute('data-ad-height', String(height));
+    ref.current.appendChild(ins);
+
+    // 최초 광고 호출
+    if (window.kakao?.AdFit?.create) {
+      window.kakao.AdFit.create();
+    }
+
+    // 탭 복귀 시에도 광고 재호출
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && window.kakao?.AdFit?.create) {
+        window.kakao.AdFit.create();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [adUnit, width, height]);
+
+  return (
+    <div
+      ref={ref}
+      className="adfit-container"
+      style={{ textAlign: 'center' }}
+    />
+  );
+};
+
 
 // 줄바꿈 함수
 const formatTextWithLineBreaks = (text) => {
@@ -53,7 +106,7 @@ function Home() {
   return (
     <div className="page-container">
       <h1>@return Game;</h1>
-      <h5>이 사이트는 PC 환경에 최적화되어 있습니다</h5>
+      <h5>경희고등학교 게임 개발 동아리</h5>
       <div className="home-links">
         <a 
           href="https://www.instagram.com/_return_game_" 
@@ -61,15 +114,16 @@ function Home() {
           target="_blank" 
           rel="noopener noreferrer"
         >
-          동아리 인스타
+          동아리 인스타그램
         </a>
         <Link to="/project" className="home-link-box">
-          프로젝트
+          프로젝트 둘러보기
         </Link>
         <Link to="/introduce" className="home-link-box">
-          소개
+          동아리 연혁 보기
         </Link>
       </div>
+      <AdFitBanner />
     </div>
   );
 }
@@ -278,8 +332,8 @@ function ProjectDetails() {
 
   // 프로젝트 상세 페이지 UI
   return (
-    <div className="page-container">  
-
+    <div className="page-container project-details-page">  
+      <AdFitBanner />
       <div className="project-layout">
         {/* 왼쪽: 게임 방법 및 게임 정보 */}
         <div className="game-instructions">
@@ -502,11 +556,9 @@ function Introduce() {
 
 // 네비게이션 바
 function Navbar() {
-  // 현재 활성화된 탭 상태 관리
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('/');
 
-  // 현재 경로에 따라 활성화된 탭 설정
   useEffect(() => {
     const path = location.pathname;
     if (path === '/') {
@@ -518,35 +570,28 @@ function Navbar() {
     }
   }, [location]);
 
-  // 네비게이션 바 UI
   return (
     <nav className="navbar">
       <div className="navbar-title">
-        <img src="/logo_long.png" alt="logo" className="logo" />
+        <Link to="/">
+          <img src="/logo_long.png" alt="logo" className="logo" />
+        </Link>
       </div>
       <div className="navbar-links">
-        <Link
-          to="/"
-          className={`nav-link ${activeTab === '/' ? 'active' : ''}`}
-        >
+        <Link to="/" className={`nav-link ${activeTab === '/' ? 'active' : ''}`}>
           홈
         </Link>
-        <Link
-          to="/project"
-          className={`nav-link ${activeTab === '/project' ? 'active' : ''}`}
-        >
+        <Link to="/project" className={`nav-link ${activeTab === '/project' ? 'active' : ''}`}>
           프로젝트
         </Link>
-        <Link
-          to="/introduce"
-          className={`nav-link ${activeTab === '/introduce' ? 'active' : ''}`}
-        >
+        <Link to="/introduce" className={`nav-link ${activeTab === '/introduce' ? 'active' : ''}`}>
           소개
         </Link>
       </div>
     </nav>
   );
 }
+
 
 // Animation
 function AnimatedRoutes() {
