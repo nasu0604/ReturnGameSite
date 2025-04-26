@@ -29,44 +29,42 @@ function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
 }
 
 const AdFitBanner = ({
-  adUnit = 'DAN-cbhNH2DQGsz5BG5u',
+  adUnit = "DAN-cbhNH2DQGsz5BG5u",
   width = 728,
   height = 90
 }) => {
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    const container = ref.current;
+    if (!container) return;
 
-    // 기존 광고 요소 제거
-    ref.current.innerHTML = '';
+    // 1) 기존 내용 제거
+    container.innerHTML = '';
 
-    // 광고 ins 요소 생성 및 속성 설정
+    // 2) <ins> 요소 생성 (style display:none은 SDK가 알아서 변경)
     const ins = document.createElement('ins');
     ins.className = 'kakao_ad_area';
-    ins.style.display = 'inline-block';
-    ins.style.width  = `${width}px`;
-    ins.style.height = `${height}px`;
-    ins.setAttribute('data-ad-unit', adUnit);
-    ins.setAttribute('data-ad-width', String(width));
+    ins.style.display = 'none';
+    ins.setAttribute('data-ad-unit',   adUnit);
+    ins.setAttribute('data-ad-width',  String(width));
     ins.setAttribute('data-ad-height', String(height));
-    ref.current.appendChild(ins);
+    container.appendChild(ins);
 
-    // 최초 광고 호출
-    if (window.kakao?.AdFit?.create) {
-      window.kakao.AdFit.create();
-    }
+    // 3) 스크립트 로드
+    const script = document.createElement('script');
+    script.src   = '//t1.daumcdn.net/kas/static/ba.min.js';
+    script.async = true;
+    container.appendChild(script);
 
-    // 탭 복귀 시에도 광고 재호출
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && window.kakao?.AdFit?.create) {
-        window.kakao.AdFit.create();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
+    // 4) 언마운트 시 정리
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // SDK 전역 인스턴스가 있으면 destroy
+      if (window.adfit?.destroy) {
+        window.adfit.destroy(adUnit);
+      }
+      // 컨테이너 초기화
+      container.innerHTML = '';
     };
   }, [adUnit, width, height]);
 
@@ -78,6 +76,7 @@ const AdFitBanner = ({
     />
   );
 };
+
 
 
 // 줄바꿈 함수
