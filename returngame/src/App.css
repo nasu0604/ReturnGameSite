@@ -3,13 +3,14 @@
 .kakao_ad_area iframe {
   border-radius: 0 !important;
 }
+
 .kakao_ad_area {
   overflow: visible !important;
 }
 
 .adfit-container {
-  overflow: visible;
-  border-radius: 0;
+  width: 100% !important;
+  z-index: auto !important;
 }
 
 * {
@@ -459,10 +460,9 @@ textarea {
 .project-layout {
   display: grid;
   grid-template-columns: minmax(200px, 1fr) 850px minmax(200px, 1fr);
-  margin-bottom: 15px;
   gap: 10px;
   width: 100%;
-  height: 700px;
+  height: 590px;
   padding-top: 10px;
   padding-left: 20px;
   padding-right: 20px;
@@ -882,10 +882,6 @@ strong {
     padding-top: 10px;
   }
 
-  .project-details-page .adfit-container {
-    display: none !important;
-  }
-
   .game-container { order: 1; }
   .ratings-comments-wrapper { order: 3; }
   .game-instructions { order: 2; }
@@ -969,5 +965,21 @@ strong {
   }
   .photo-modal .modal-controls {
     justify-content: space-between !important;
+  }
+  .project-details-page .adfit-container {
+    position: relative !important; /* 절대·고정 제거 */
+    display: block !important;     /* 블록 레벨로 전환 */
+    clear: both !important;        /* 떠 있는 요소 정리 */
+    margin: 12px auto !important;  /* 상하 여백 */
+    z-index: auto !important;      /* 겹침 방지 */
+  }
+
+  .adfit-container {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .project-details-page .adfit-container {
+    display: none !important;
   }
 }

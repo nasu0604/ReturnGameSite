@@ -29,9 +29,14 @@ function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
 }
 
 const AdFitBanner = ({
+  // 데스크탑 기본값
   adUnit = "DAN-cbhNH2DQGsz5BG5u",
-  width = 728,
-  height = 90
+  width  = 728,
+  height = 90,
+  // 모바일 기본값
+  mobileAdUnit = "DAN-5HHAjw0y2pRiS3R9",
+  mobileWidth  = 320,
+  mobileHeight = 100
 }) => {
   const ref = useRef(null);
 
@@ -39,42 +44,41 @@ const AdFitBanner = ({
     const container = ref.current;
     if (!container) return;
 
-    // 1) 기존 내용 제거
+    // 1) 컨테이너 초기화
     container.innerHTML = '';
 
-    // 2) <ins> 요소 생성 (style display:none은 SDK가 알아서 변경)
+    // 2) 화면 크기에 따라 사용할 유닛/크기 선택
+    const isMobile = window.innerWidth <= 768;
+    const unit   = isMobile ? mobileAdUnit : adUnit;
+    const w      = isMobile ? mobileWidth  : width;
+    const h      = isMobile ? mobileHeight : height;
+
+    // 3) ins 요소 생성
     const ins = document.createElement('ins');
     ins.className = 'kakao_ad_area';
-    ins.style.display = 'none';
-    ins.setAttribute('data-ad-unit',   adUnit);
-    ins.setAttribute('data-ad-width',  String(width));
-    ins.setAttribute('data-ad-height', String(height));
+    ins.style.display = 'none';            // SDK가 로드되면 show 처리
+    ins.setAttribute('data-ad-unit',   unit);
+    ins.setAttribute('data-ad-width',  String(w));
+    ins.setAttribute('data-ad-height', String(h));
     container.appendChild(ins);
 
-    // 3) 스크립트 로드
+    // 4) 스크립트 로드
     const script = document.createElement('script');
     script.src   = '//t1.daumcdn.net/kas/static/ba.min.js';
     script.async = true;
     container.appendChild(script);
 
-    // 4) 언마운트 시 정리
+    // 5) 언마운트 시 정리
     return () => {
-      // SDK 전역 인스턴스가 있으면 destroy
-      if (window.adfit?.destroy) {
-        window.adfit.destroy(adUnit);
-      }
-      // 컨테이너 초기화
+      if (window.adfit?.destroy) window.adfit.destroy(unit);
       container.innerHTML = '';
     };
-  }, [adUnit, width, height]);
+  }, [
+    adUnit, width, height,
+    mobileAdUnit, mobileWidth, mobileHeight
+  ]);
 
-  return (
-    <div
-      ref={ref}
-      className="adfit-container"
-      style={{ textAlign: 'center' }}
-    />
-  );
+  return <div ref={ref} className="adfit-container" style={{ textAlign: 'center' }}/>;
 };
 
 
@@ -332,7 +336,6 @@ function ProjectDetails() {
   // 프로젝트 상세 페이지 UI
   return (
     <div className="page-container project-details-page">  
-      <AdFitBanner />
       <div className="project-layout">
         {/* 왼쪽: 게임 방법 및 게임 정보 */}
         <div className="game-instructions">
@@ -462,6 +465,7 @@ function ProjectDetails() {
           </div>
         </div>
       </div>
+      <AdFitBanner />
     </div>
   );
 }
