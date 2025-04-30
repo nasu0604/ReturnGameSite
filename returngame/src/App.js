@@ -28,12 +28,34 @@ function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
   );
 }
 
+// 줄바꿈 함수
+const formatTextWithLineBreaks = (text) => {
+  const regex = /(\{[^}]+\})/g;
+  return text.split(regex).map((segment, index) => {
+    if (regex.test(segment)) {
+      return <span key={index} className="gray-text">{segment}</span>;
+    }
+    const lines = segment.split('\n');
+    return (
+      <span key={index}>
+        {lines.map((line, i) => (
+          <React.Fragment key={i}>
+            {line}
+            {i < lines.length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </span>
+    );
+  });
+};
+
+// 광고 배너 컴포넌트
 const AdFitBanner = ({
-  // 데스크탑 기본값
+  // PC형 광고
   adUnit = "DAN-cbhNH2DQGsz5BG5u",
   width  = 728,
   height = 90,
-  // 모바일 기본값
+  // 모바일형 광고
   mobileAdUnit = "DAN-5HHAjw0y2pRiS3R9",
   mobileWidth  = 320,
   mobileHeight = 100
@@ -79,29 +101,6 @@ const AdFitBanner = ({
   ]);
 
   return <div ref={ref} className="adfit-container" style={{ textAlign: 'center' }}/>;
-};
-
-
-
-// 줄바꿈 함수
-const formatTextWithLineBreaks = (text) => {
-  const regex = /(\{[^}]+\})/g;
-  return text.split(regex).map((segment, index) => {
-    if (regex.test(segment)) {
-      return <span key={index} className="gray-text">{segment}</span>;
-    }
-    const lines = segment.split('\n');
-    return (
-      <span key={index}>
-        {lines.map((line, i) => (
-          <React.Fragment key={i}>
-            {line}
-            {i < lines.length - 1 && <br />}
-          </React.Fragment>
-        ))}
-      </span>
-    );
-  });
 };
 
 // 메인 페이지

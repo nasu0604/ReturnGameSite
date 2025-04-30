@@ -1,13 +1,13 @@
 [
     {
       "id": "tetro-mok",
-      "name": "Tetro-Mok",
+      "name": "트리미노목",
       "main_desc": "테트리스와 오목을 결합한 퓨전 보드게임!",
       "imagePath": "/unity/tetro-mok/tetro-mok.png",
       "iframeSrc": "/unity/tetro-mok/index.html",
       "concept": "아케이드",
       "difficulty": 3,
-      "developer": "sukonnbu",
+      "developer": "최지완",
       "date":2025,
       "how": "1. 흑과 백이 번갈아서 무작위로 주어지는 트리미노 형태의 돌을 회전하며 배치한다.\n2. 같은 색의 돌이 10개 이상 이어지면 해당 플레이어는 기본으로 10점을 얻고 그 줄이 지워진다.\n3. 학률로 생성되는 보너스 돌은 두 플레이어 모두 이용 가능하며, 해당 돌을 포함해 연결할 때 마다 3점을 추가로 얻는다.\n4. 두 플레이어가 모두 동의하면 게임 종료가 선언되고, 점수를 추가로 산정한다.\n5. 게임 종료 시 같은 색의 돌이 5개 이상 연결되어 있으면 5점을 얻으며, 보너스 돌의 효과 또한 받는다.\n6. 최종 점수가 더 높은 플레이어가 승리한다."
     },
@@ -19,7 +19,7 @@
       "iframeSrc": "/unity/rG_A/index.html",
       "concept": "퍼즐",
       "difficulty": 4,
-      "developer": "LOOPARAM / Yangnyom",
+      "developer": "이건희 김강민 이호진",
       "date":2024,
       "how": "1. 머리, 몸, 화살을 Shift를 통해 따로 조작하며 기믹을 활용해 게임을 클리어하자!\n2. 특정 버튼은 특정 문과 연결되어 있다!\n3. 머리와 몸이 결합된 상태여야 스테이지가 클리어 된다! \n결합은 머리와 몸이 상하로 붙도록 이동한 후 F로 가능하다. \n4. 분쇄기에 머리나 몸의 발이 닿으면 스테이지 실패!\n5. 화살을 파괴시킬 수 있는 타일이 있으니 조심할 것!"
     },
@@ -31,7 +31,7 @@
       "iframeSrc": "/unity/rG_B/index.html",
       "concept": "탈출",
       "difficulty": 3,
-      "developer": "berryprince30 / 20617chaehun / Jooniornaver / LOOPARAM / sinjihong08",
+      "developer": "이형주 손지호 윤채훈 오준석 이준혁",
       "date":2024,
       "how": "1. WASD를 활용하여 이동하며 벽타기가 가능하다.\n2. Ctrl+Click으로 대쉬 및 공격하자\n3. 기본 모드와 함께 스피드런 모드도 함께 즐겨보자!"
     },
@@ -43,7 +43,7 @@
       "iframeSrc": "/unity/rG_D/index.html",
       "concept": "키우기",
       "difficulty": 1,
-      "developer": "MGL0526 / yeongjibro",
+      "developer": "최성윤 조희성",
       "date":2024,
       "how": "Copyright © Goldmetal"
     },
@@ -55,7 +55,7 @@
       "iframeSrc": "/unity/rG_E/index.html",
       "concept": "생존",
       "difficulty": 3,
-      "developer": "berryprince30 / mugglewoojin / LOOPARAM",
+      "developer": "황우진 이형주 오준석",
       "date":2024,
       "how": "몰려오는 적들을 피하며 살아남자!"
     }
