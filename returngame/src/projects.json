@@ -1,15 +1,80 @@
 [
     {
+      "id": "Health-the-rock",
+      "name": "헬스더락",
+      "main_desc": "금마리와 함께하는 헬스 리듬게임!",
+      "imagePath": "/unity/Health-the-rock/Health-the-rock.png",
+      "iframeSrc": "/unity/Health-the-rock/index.html",
+      "difficulty": 3,
+      "developer": "이형주",
+      "date":2025,
+      "how": "금마리, 송소령과 함께하는 리듬 헬스!! 헬스의 기본은 바로 리듬을 맞추는 것! 키보드의 아무 버튼을 리듬에 맞춰 눌러 근육을 키우자!(웹 환경에서는 루틴 제작 기능과 자유 루틴 기능을 지원하지 않습니다.)"
+    },
+    {
+      "id": "RasingTier",
+      "name": "RasingTier",
+      "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+      "imagePath": "/unity/RasingTier/RasingTier.png",
+      "iframeSrc": "/unity/RasingTier/index.html",
+      "difficulty": 3,
+      "developer": "나선욱",
+      "date":2025,
+      "how": "1.좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
+    },
+    {
+      "id": "daedooSimulator",
+      "name": "머리강화시뮬레이터",
+      "main_desc": "머리와 강화를 결합한 퓨전 확률갓겜!",
+      "imagePath": "/unity/daedooSimulator/daedooSimulator.png",
+      "iframeSrc": "/unity/daedooSimulator/index.html",
+      "difficulty": 2,
+      "developer": "김강민",
+      "date":2025,
+      "how": "강화하라. \n 초월하라.\n 쟁취하라."
+    },
+        {
       "id": "tetro-mok",
       "name": "트리미노목",
       "main_desc": "테트리스와 오목을 결합한 퓨전 보드게임!",
       "imagePath": "/unity/tetro-mok/tetro-mok.png",
       "iframeSrc": "/unity/tetro-mok/index.html",
-      "concept": "아케이드",
       "difficulty": 3,
       "developer": "최지완",
       "date":2025,
       "how": "1. 흑과 백이 번갈아서 무작위로 주어지는 트리미노 형태의 돌을 회전하며 배치한다.\n2. 같은 색의 돌이 10개 이상 이어지면 해당 플레이어는 기본으로 10점을 얻고 그 줄이 지워진다.\n3. 학률로 생성되는 보너스 돌은 두 플레이어 모두 이용 가능하며, 해당 돌을 포함해 연결할 때 마다 3점을 추가로 얻는다.\n4. 두 플레이어가 모두 동의하면 게임 종료가 선언되고, 점수를 추가로 산정한다.\n5. 게임 종료 시 같은 색의 돌이 5개 이상 연결되어 있으면 5점을 얻으며, 보너스 돌의 효과 또한 받는다.\n6. 최종 점수가 더 높은 플레이어가 승리한다."
+    },
+    {
+      "id": "starcatch",
+      "name": "스타캐치",
+      "main_desc": "당신의 반응속도를 극한으로 활용하라!",
+      "imagePath": "/unity/starcatch/starcatch.png",
+      "iframeSrc": "/unity/starcatch/index.html",
+      "difficulty": 2,
+      "developer": "손지호",
+      "date":2025,
+      "how": "1. 스타트 버튼을 누른다. 2. 움직이는 별이 노란색 기준선에 오는 타이밍에 맞춰 스페이스바를 누른다. 3. 10번 반복하면 최종점수가 나온다(300점 만점)."
+    },
+    {
+      "id": "catch",
+      "name": "술래잡기",
+      "main_desc": "귀신을 피하는 술래잡기",
+      "imagePath": "/unity/catch/catch.png",
+      "iframeSrc": "/unity/catch/index.html",
+      "difficulty": 2,
+      "developer": "배우빈",
+      "date":2025,
+      "how": "1.이동키는 wasd이고 위쪽에 세모 오브젝트에 닿으면 게임이 시작된다. e를 누르면 상대의 속도가 감소하고 r을 누르면 나의 속도가 상승한다. 적한테 잡히지 않고 오래 살아남는게 목표"
+    },
+    {
+      "id": "QUIZAVOID",
+      "name": "QUIZ AVOID",
+      "main_desc": "퀴즈게임을 똥피하기로 즐겨보자",
+      "imagePath": "/unity/QUIZAVOID/QUIZAVOID.png",
+      "iframeSrc": "/unity/QUIZAVOID/index.html",
+      "difficulty": 1,
+      "developer": "백민규",
+      "date":2025,
+      "how": "1. 주어지는 문제에 맞게 정답을 선택한다.\n2. 정답이라면 다음 문제로 넘어갈 수 있다.\n3. 총 7문제를 풀면 게임을 클리어할 수 있다.\n4. 정답 선택이 느리다면 정답을 고르던 오답을 고르던 게임이 종료된다.\n5. 맵 밖으로 나갈 수 있지만 되도록이면 나가지 말자."
     },
     {
       "id": "rG_A",
@@ -17,8 +82,7 @@
       "main_desc": "퍼즐을 풀며 스테이지를 클리어하세요!",
       "imagePath": "/unity/rG_A/rG_A.png",
       "iframeSrc": "/unity/rG_A/index.html",
-      "concept": "퍼즐",
-      "difficulty": 4,
+      "difficulty": 5,
       "developer": "이건희 김강민 이호진",
       "date":2024,
       "how": "1. 머리, 몸, 화살을 Shift를 통해 따로 조작하며 기믹을 활용해 게임을 클리어하자!\n2. 특정 버튼은 특정 문과 연결되어 있다!\n3. 머리와 몸이 결합된 상태여야 스테이지가 클리어 된다! \n결합은 머리와 몸이 상하로 붙도록 이동한 후 F로 가능하다. \n4. 분쇄기에 머리나 몸의 발이 닿으면 스테이지 실패!\n5. 화살을 파괴시킬 수 있는 타일이 있으니 조심할 것!"
@@ -29,7 +93,6 @@
       "main_desc": "대쉬 기능을 사용해 탈출하세요!",
       "imagePath": "/unity/rG_B/rG_B.png",
       "iframeSrc": "/unity/rG_B/index.html",
-      "concept": "탈출",
       "difficulty": 3,
       "developer": "이형주 손지호 윤채훈 오준석 이준혁",
       "date":2024,
@@ -41,9 +104,8 @@
       "main_desc": "귀여운 젤리를 키워보세요!",
       "imagePath": "/unity/rG_D/rG_D.png",
       "iframeSrc": "/unity/rG_D/index.html",
-      "concept": "키우기",
       "difficulty": 1,
-      "developer": "최성윤 조희성",
+      "developer": "최성윤 조희성 김도윤",
       "date":2024,
       "how": "Copyright © Goldmetal"
     },
@@ -53,7 +115,6 @@
       "main_desc": "몰려오는 적들을 뚫고 살아나가세요!",
       "imagePath": "/unity/rG_E/rG_E.png",
       "iframeSrc": "/unity/rG_E/index.html",
-      "concept": "생존",
       "difficulty": 3,
       "developer": "황우진 이형주 오준석",
       "date":2024,

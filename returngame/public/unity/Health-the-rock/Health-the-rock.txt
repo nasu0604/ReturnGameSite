@@ -1,0 +1,11 @@
+{
+      "id": "Health-the-rock",
+      "name": "헬스더락",
+      "main_desc": "금마리와 함께하는 헬스 리듬게임!",
+      "imagePath": "/unity/Health-the-rock/Health-the-rock.png",
+      "iframeSrc": "/unity/Health-the-rock/index.html",
+      "difficulty": 3,
+      "developer": "berryprince30",
+      "date":2025,
+      "how": "금마리, 송소령과 함께하는 리듬 헬스!! 헬스의 기본은 바로 리듬을 맞추는 것! 키보드의 아무 버튼을 리듬에 맞춰 눌러 근육을 키우자!(웹 환경에서는 루틴 제작 기능과 자유 루틴 기능을 지원하지 않습니다.)"
+    },

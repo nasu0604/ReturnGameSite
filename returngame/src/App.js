@@ -51,6 +51,7 @@ const formatTextWithLineBreaks = (text) => {
 
 // 광고 배너 컴포넌트
 const AdFitBanner = ({
+
   // PC형 광고
   adUnit = "DAN-cbhNH2DQGsz5BG5u",
   width  = 728,
@@ -66,31 +67,26 @@ const AdFitBanner = ({
     const container = ref.current;
     if (!container) return;
 
-    // 1) 컨테이너 초기화
     container.innerHTML = '';
 
-    // 2) 화면 크기에 따라 사용할 유닛/크기 선택
     const isMobile = window.innerWidth <= 768;
     const unit   = isMobile ? mobileAdUnit : adUnit;
     const w      = isMobile ? mobileWidth  : width;
     const h      = isMobile ? mobileHeight : height;
 
-    // 3) ins 요소 생성
     const ins = document.createElement('ins');
     ins.className = 'kakao_ad_area';
-    ins.style.display = 'none';            // SDK가 로드되면 show 처리
+    ins.style.display = 'none';
     ins.setAttribute('data-ad-unit',   unit);
     ins.setAttribute('data-ad-width',  String(w));
     ins.setAttribute('data-ad-height', String(h));
     container.appendChild(ins);
 
-    // 4) 스크립트 로드
     const script = document.createElement('script');
     script.src   = '//t1.daumcdn.net/kas/static/ba.min.js';
     script.async = true;
     container.appendChild(script);
 
-    // 5) 언마운트 시 정리
     return () => {
       if (window.adfit?.destroy) window.adfit.destroy(unit);
       container.innerHTML = '';
@@ -133,49 +129,48 @@ function Home() {
 // 프로젝트 리스트 페이지
 function Project() {
   const [ratings, setRatings] = useState({});
+  const [commentCounts, setCommentCounts] = useState({});
 
-  // Firestore에서 각 프로젝트의 평점 데이터를 실시간 구독
+  // 평점 구독
   useEffect(() => {
-    const unsubscribes = projectsData.map((project) => {
-      const projectRef = doc(collection(db, 'projectRatings'), project.id);
-      return onSnapshot(projectRef, (docSnap) => {
-        if (docSnap.exists()) {
-          setRatings((prev) => ({
-            ...prev,
-            [project.id]: docSnap.data().ratings || [],
-          }));
-        } else {
-          setRatings((prev) => ({
-            ...prev,
-            [project.id]: [],
-          }));
-        }
+    const unsubs = projectsData.map(project => {
+      const ref = doc(collection(db, 'projectRatings'), project.id);
+      return onSnapshot(ref, snap => {
+        setRatings(prev => ({
+          ...prev,
+          [project.id]: snap.exists() ? snap.data().ratings || [] : []
+        }));
       });
     });
-
-    // 컴포넌트 언마운트 시 구독 해제
-    return () => unsubscribes.forEach((unsub) => unsub());
+    return () => unsubs.forEach(u => u());
   }, []);
 
-  // 평균 평점 계산 함수
-  const getAverageRating = (projectId) => {
-    const project = projectsData.find((p) => p.id === projectId);
-    const projectRatings = ratings[projectId] || [];
+  // 댓글 수 구독
+  useEffect(() => {
+    const unsubs = projectsData.map(project => {
+      const ref = doc(collection(db, 'projectComments'), project.id);
+      return onSnapshot(ref, snap => {
+        setCommentCounts(prev => ({
+          ...prev,
+          [project.id]: snap.exists() ? (snap.data().comments || []).length : 0
+        }));
+      });
+    });
+    return () => unsubs.forEach(u => u());
+  }, []);
 
-    if (projectRatings.length > 0) {
-      const averageRating =
-        projectRatings.reduce((total, rating) => total + rating, 0) / projectRatings.length;
-      return averageRating.toFixed(1);
-    } else {
-      return project.rating ? project.rating.toFixed(1) : '0.0';
-    }
+  const getAverageRating = id => {
+    const arr = ratings[id] || [];
+    if (arr.length === 0) return '0.0';
+    return (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1);
   };
+  const getRatingCount = id => (ratings[id] || []).length;
+  const getCommentCount = id => commentCounts[id] || 0;
 
-  // UI 렌더링
   return (
     <div className="page-container">
       <ul>
-        {projectsData.map((project) => (
+        {projectsData.map(project => (
           <li key={project.id}>
             <Link to={`/project/${project.id}`} className="project-item">
               <div className="project-image-container">
@@ -187,12 +182,25 @@ function Project() {
               </div>
               <div className="project-text-container">
                 <div className="project-text-row">
-                  <div className="project-title">{project.name}</div>
-                  <div className="project-rating">★ {getAverageRating(project.id)}</div>
+                  <div className="project-title">
+                      {project.name}
+                      {project.date === 2025 && (
+                        <span className="new-badge">N</span>
+                      )}
+                  </div>
+                  <div className="project-rating">
+                    ★ {getAverageRating(project.id)}
+                    <span className="rating-count">
+                      ({getRatingCount(project.id)})
+                    </span>
+                  </div>
                 </div>
                 <div className="project-text-row">
                   <div className="project-subtitle">{project.main_desc}</div>
-                  <div className="project-concept">{project.concept}</div>
+                  <div className="project-comments-info">
+                    <span className="material-icons comment-icon">comment</span>
+                    {getCommentCount(project.id)}
+                  </div>
                 </div>
               </div>
             </Link>
@@ -202,6 +210,8 @@ function Project() {
     </div>
   );
 }
+
+
 
 // 프로젝트 상세 페이지
 function ProjectDetails() {
@@ -329,7 +339,6 @@ function ProjectDetails() {
     }
   };
 
-  // 가장 최근 평점을 사용자 평점으로 표시
   const userRating = ratings.length > 0 ? ratings[ratings.length - 1] : 0;
 
   // 프로젝트 상세 페이지 UI
@@ -341,12 +350,12 @@ function ProjectDetails() {
           <div className="instruction-box">
             <h2>게임 방법</h2>
             <p>{formatTextWithLineBreaks(project.how)}</p>
+            <h6>
+              ※ 게임 해상도에 오류가 있을 경우, 전체화면을 권장합니다.
+            </h6>
           </div>
           <div className="game-info">
             <h2>게임 정보</h2>
-            <p>
-              <strong>장르:</strong> {project.concept}
-            </p>
             <p>
               <strong>난이도:</strong>
               {[...Array(5)].map((_, index) => (
@@ -382,7 +391,7 @@ function ProjectDetails() {
         <div className="ratings-comments-wrapper">
           <div className="ratings-comments">
             <div className="rating-container">
-              <h2>평가</h2>
+              <h2>평점</h2>
               <StarRating
                 projectId={project.id}
                 initialRating={userRating}
@@ -391,8 +400,8 @@ function ProjectDetails() {
             </div>
 
             <div className="comments-section">
-              <h2>댓글</h2>
               {/* 댓글 입력 폼 */}
+              <h2>댓글</h2>
               <form onSubmit={handleAddComment} className="comment-form">
                 <div className="horizontal-inputs">
                   <input
@@ -647,22 +656,149 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
   const [rating, setRating] = useState(initialRating);
   const [hover, setHover] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [userIp, setUserIp] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+  const [isRatingAllowed, setIsRatingAllowed] = useState(true);
+
+  // IP 가져오기
+  useEffect(() => {
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => {
+        setUserIp(data.ip);
+        checkRatingEligibility(data.ip);
+      })
+      .catch(error => {
+        console.error('IP를 가져오는 중 오류 발생:', error);
+        setUserIp(`fallback-${Math.random().toString(36).substring(2, 15)}`);
+      });
+  }, [projectId]);
 
   // 받은 초기값이 바뀌면 상태 반영
   useEffect(() => {
     setRating(initialRating);
   }, [initialRating]);
 
-  // 별 클릭 이벤트
-  const handleClick = (starValue) => {
-    setRating(starValue);
-    onRatingChange(projectId, starValue); // firestore에 저장
-    setShowPopup(true);
+  // 쿨다운 타이머
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown(prevCooldown => {
+          const newCooldown = prevCooldown - 1;
+          if (newCooldown <= 0) {
+            setIsRatingAllowed(true);
+            clearInterval(timer);
+            return 0;
+          }
+          return newCooldown;
+        });
+      }, 1000);
+    }
 
-    // 1초 후 팝업 닫기
-    setTimeout(() => {
-      setShowPopup(false);
-    }, 1000);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [cooldown]);
+
+  // 평가 가능 여부 확인
+  const checkRatingEligibility = async (ip) => {
+    if (!ip) return;
+
+    try {
+      // IP별 평가 기록 문서 참조
+      const ipRatingsRef = doc(collection(db, 'ipRatings'), ip);
+      const docSnap = await getDoc(ipRatingsRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const projectRating = data[projectId];
+        
+        // 해당 프로젝트에 대한 평가 기록이 있는지 확인
+        if (projectRating) {
+          const lastRatedTime = projectRating.timestamp;
+          const currentTime = Date.now();
+          const elapsedSeconds = Math.floor((currentTime - lastRatedTime) / 1000);
+          
+          // 60초 이내에 평가했는지 확인
+          if (elapsedSeconds < 60) {
+            const remainingSeconds = 60 - elapsedSeconds;
+            setCooldown(remainingSeconds);
+            setIsRatingAllowed(false);
+          } else {
+            setIsRatingAllowed(true);
+          }
+        } else {
+          setIsRatingAllowed(true);
+        }
+      } else {
+        // 첫 평가인 경우
+        setIsRatingAllowed(true);
+      }
+    } catch (error) {
+      console.error('평가 가능 여부 확인 중 오류 발생:', error);
+      setIsRatingAllowed(true); // 오류 시 기본적으로 허용
+    }
+  };
+
+  // 별 클릭 이벤트
+  const handleClick = async (starValue) => {
+    if (!userIp) {
+      setPopupMessage('IP 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.');
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 2000);
+      return;
+    }
+
+    if (!isRatingAllowed) {
+      setPopupMessage(`분당 1회만 입력 가능합니다. 남은시간: ${cooldown}초`);
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 2000);
+      return;
+    }
+
+    try {
+      // 평점 업데이트
+      setRating(starValue);
+      onRatingChange(projectId, starValue); // firestore에 저장
+      
+      // IP 기록 업데이트
+      const ipRatingsRef = doc(collection(db, 'ipRatings'), userIp);
+      const docSnap = await getDoc(ipRatingsRef);
+      
+      if (docSnap.exists()) {
+        // 기존 문서 업데이트
+        await updateDoc(ipRatingsRef, {
+          [projectId]: {
+            rating: starValue,
+            timestamp: Date.now()
+          }
+        });
+      } else {
+        // 새 문서 생성
+        await setDoc(ipRatingsRef, {
+          [projectId]: {
+            rating: starValue,
+            timestamp: Date.now()
+          }
+        });
+      }
+      
+      // 쿨다운 시작
+      setCooldown(60);
+      setIsRatingAllowed(false);
+      
+      // 성공 메시지 표시
+      setPopupMessage('평가가 완료되었습니다!');
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 2000);
+    } catch (error) {
+      console.error('평점 저장 중 오류 발생:', error);
+      setPopupMessage('평점 저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 2000);
+    }
   };
 
   // 평점 UI
@@ -684,10 +820,9 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
           );
         })}
       </div>
-
       {showPopup && (
         <div className="rating-popup">
-          평가가 완료되었습니다!
+          {popupMessage}
         </div>
       )}
     </div>
