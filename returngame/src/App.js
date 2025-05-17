@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo} from 'react';
+import {createPortal} from 'react-dom';
 import { db, collection, doc, getDoc, setDoc, onSnapshot } from './firebase';
-import { updateDoc, arrayUnion } from 'firebase/firestore';
+import { updateDoc, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import projectsData from './projects.json';
 import timelineData from './timelineData.json';
@@ -130,6 +131,27 @@ function Home() {
 function Project() {
   const [ratings, setRatings] = useState({});
   const [commentCounts, setCommentCounts] = useState({});
+  const [viewCounts, setViewCounts] = useState({});
+  const [sortOption, setSortOption] = useState(() => {
+    return localStorage.getItem('sortOption') || 'default';
+  });
+
+  // 조회수 증가 함수
+  const incrementView = async id => {
+    const ref = doc(db, 'projectViews', id);
+    try {
+      await runTransaction(db, async tx => {
+        const snap = await tx.get(ref);
+        if (snap.exists()) {
+          tx.update(ref, { views: increment(1) });
+        } else {
+          tx.set(ref, { views: 1 });
+        }
+      });
+    } catch (e) {
+      console.error('조회수 증가 실패:', e);
+    }
+  };
 
   // 평점 구독
   useEffect(() => {
@@ -159,6 +181,20 @@ function Project() {
     return () => unsubs.forEach(u => u());
   }, []);
 
+  // 조회수 구독
+  useEffect(() => {
+    const unsubs = projectsData.map(project => {
+      const ref = doc(collection(db, 'projectViews'), project.id);
+      return onSnapshot(ref, snap => {
+        setViewCounts(prev => ({
+          ...prev,
+          [project.id]: snap.exists() ? snap.data().views || 0 : 0
+        }));
+      });
+    });
+    return () => unsubs.forEach(u => u());
+  }, []);
+
   const getAverageRating = id => {
     const arr = ratings[id] || [];
     if (arr.length === 0) return '0.0';
@@ -167,51 +203,98 @@ function Project() {
   const getRatingCount = id => (ratings[id] || []).length;
   const getCommentCount = id => commentCounts[id] || 0;
 
+  const sortedProjects = useMemo(() => {
+    const list = [...projectsData];
+    switch (sortOption) {
+      case 'popularity':
+        return list.sort(
+          (a, b) => (viewCounts[b.id] || 0) - (viewCounts[a.id] || 0)
+        );
+      case 'rating':
+        return list.sort(
+          (a, b) => getAverageRating(b.id) - getAverageRating(a.id)
+        );
+      case 'comments':
+        return list.sort(
+          (a, b) => (commentCounts[b.id] || 0) - (commentCounts[a.id] || 0)
+        );
+      default:
+        return list;
+    }
+  }, [sortOption, viewCounts, ratings, commentCounts]);
+
+  // 드롭다운
+  const navbar = document.querySelector('.navbar');
+  const dropdownPortal = navbar && createPortal(
+    <div className="sort-container-portal">
+      <select
+        className="sort-dropdown"
+        value={sortOption}
+        onChange={e => {
+          const v = e.target.value;
+          setSortOption(v);
+          localStorage.setItem('sortOption', v);
+        }}
+      >
+        <option value="default">기본순</option>
+        <option value="popularity">인기순</option>
+        <option value="rating">별점순</option>
+        <option value="comments">댓글순</option>
+      </select>
+    </div>,
+    navbar
+  );
+
   return (
-    <div className="page-container">
-      <ul>
-        {projectsData.map(project => (
-          <li key={project.id}>
-            <Link to={`/project/${project.id}`} className="project-item">
-              <div className="project-image-container">
-                <img
-                  src={project.imagePath}
-                  alt={project.name}
-                  className="project-image"
-                />
-              </div>
-              <div className="project-text-container">
-                <div className="project-text-row">
-                  <div className="project-title">
+    <>
+      {dropdownPortal}
+      <div className="page-container">
+        <ul>
+          {sortedProjects.map(project => (
+            <li key={project.id}>
+              <Link
+                to={`/project/${project.id}`}
+                className="project-item"
+                onClick={() => incrementView(project.id)}
+              >
+                <div className="project-image-container">
+                  <img
+                    src={project.imagePath}
+                    alt={project.name}
+                    className="project-image"
+                  />
+                </div>
+                <div className="project-text-container">
+                  <div className="project-text-row">
+                    <div className="project-title">
                       {project.name}
                       {project.date === 2025 && (
                         <span className="new-badge">N</span>
                       )}
+                    </div>
+                    <div className="project-rating">
+                      ★ {getAverageRating(project.id)}
+                      <span className="rating-count">
+                        ({getRatingCount(project.id)})
+                      </span>
+                    </div>
                   </div>
-                  <div className="project-rating">
-                    ★ {getAverageRating(project.id)}
-                    <span className="rating-count">
-                      ({getRatingCount(project.id)})
-                    </span>
+                  <div className="project-text-row">
+                    <div className="project-subtitle">{project.main_desc}</div>
+                    <div className="project-comments-info">
+                      <span className="material-icons comment-icon">comment</span>
+                      {getCommentCount(project.id)}
+                    </div>
                   </div>
                 </div>
-                <div className="project-text-row">
-                  <div className="project-subtitle">{project.main_desc}</div>
-                  <div className="project-comments-info">
-                    <span className="material-icons comment-icon">comment</span>
-                    {getCommentCount(project.id)}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   );
 }
-
-
 
 // 프로젝트 상세 페이지
 function ProjectDetails() {
@@ -343,7 +426,17 @@ function ProjectDetails() {
 
   // 프로젝트 상세 페이지 UI
   return (
-    <div className="page-container project-details-page">  
+    <div className="page-container project-details-page">
+      <div className="mobile-ad-container">
+        <AdFitBanner
+          adUnit="DAN-5HHAjw0y2pRiS3R9"
+          width={320}
+          height={100}
+          mobileAdUnit="DAN-5HHAjw0y2pRiS3R9"
+          mobileWidth={320}
+          mobileHeight={100}
+        />
+      </div>  
       <div className="project-layout">
         {/* 왼쪽: 게임 방법 및 게임 정보 */}
         <div className="game-instructions">
@@ -351,7 +444,9 @@ function ProjectDetails() {
             <h2>게임 방법</h2>
             <p>{formatTextWithLineBreaks(project.how)}</p>
             <h6>
-              ※ 게임 해상도에 오류가 있을 경우, 전체화면을 권장합니다.
+              {project.caution
+                ? `※ ${project.caution}`
+                : '※ 게임 해상도에 오류가 있을 경우, 전체화면을 권장합니다'}
             </h6>
           </div>
           <div className="game-info">
@@ -473,7 +568,13 @@ function ProjectDetails() {
           </div>
         </div>
       </div>
-      <AdFitBanner />
+      <div className="pc-ad-container">
+        <AdFitBanner
+          adUnit="DAN-cbhNH2DQGsz5BG5u"
+          width={728}
+          height={90}
+        />
+      </div>
     </div>
   );
 }
@@ -602,7 +703,6 @@ function Navbar() {
     </nav>
   );
 }
-
 
 // Animation
 function AnimatedRoutes() {

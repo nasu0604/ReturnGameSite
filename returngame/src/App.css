@@ -60,13 +60,11 @@ body {
   padding-right: 20px;
   font-weight: 600;
   font-size: 16px;
-  position: fixed;
   top: 0;
   left: 0;
   justify-content: space-between;
   z-index: 1000;
   align-items: center;
-  position: relative;
   box-shadow: 0 4px 6px rgba(0,0,0,0.075);
 }
 
@@ -905,6 +903,44 @@ strong {
   display: block;
   margin: 20px auto;
   width: 100%;
+  text-align: center;
+}
+
+.sort-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.sort-container-portal {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  z-index: 999;
+  margin-top:5px;
+}
+
+.sort-dropdown {
+  padding: 8px 12px;
+  font-size: 18px;
+  border: none;
+  border-radius: 0px;
+  background-color: #111;
+  cursor: pointer;
+  color: #fff;
+  margin-top: 10px;
+}
+
+.sort-dropdown:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.sort-dropdown option {
+  color: #fff;
 }
 
 /* 모바일 반응형 */
@@ -912,7 +948,8 @@ strong {
   .navbar {
     flex-direction: column;
     align-items: center;
-    padding: 10px;
+    display: flex;
+    height: 100px;
   }
   .navbar-title {
     margin-bottom: 8px;
@@ -920,7 +957,7 @@ strong {
   .navbar-links {
     width: 100%;
     justify-content: center;
-    gap: 20px;
+    gap: 10px;
   }
 
   .home-links {
@@ -931,6 +968,11 @@ strong {
 
   .page-container {
     padding-top: 10px !important;
+  }
+
+  .page-container {
+    padding-left: 10px !important;
+    padding-right: 25px !important;
   }
 
   ul {
@@ -947,23 +989,26 @@ strong {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 0 10px;
-  }
-
-  .project-details-page {
-    padding-top: 10px;
+    padding-left: 15px;
+    padding-right: 0px;
+    padding-top: 0px !important;
   }
 
   .game-container { 
     order: 1; 
     height: auto;
+    width: 100%;
+    max-width: 100%;
     aspect-ratio: 16/9;
   }
 
-  .mobile-ad-container { 
-    order: 2; 
-    display: block;
+  .mobile-ad-container {
+    display: block !important;
+    position: static !important;
+    width: 100%;
+    text-align: center;
   }
+
   .game-instructions { 
     order: 3; 
   }
@@ -1057,17 +1102,14 @@ strong {
   .photo-modal .modal-controls button:last-child {
     transform: none !important;
   }
-  
-  .mobile-ad-container .adfit-container {
-    position: relative !important;
-    margin: 10px auto !important;
-    z-index: 1 !important;
-    width: 100% !important;
-    min-height: 100px !important;
-  }
 
-  .adfit-container {
-    margin-top: 10px !important;
-    margin-bottom: 10px !important;
+  .sort-container-portal{
+    margin-left: 140px !important;
+    margin-top: 50px !important;
+  }
+  
+  .sort-dropdown {
+    font-size : 12px !important;
+    padding: 5px 4px !important;
   }
 }
