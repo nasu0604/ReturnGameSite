@@ -70,7 +70,7 @@ body {
 
 .navbar-links {
   display: flex;
-  gap: 10px;
+  gap: 15px;
   align-items: center;
 }
 
@@ -144,10 +144,6 @@ h6 {
   font-weight: 200;
   color:#888;
   margin-top: 5px;
-}
-
-a{
-  margin-left: 8px;
 }
 
 .korean-text {
@@ -470,15 +466,19 @@ textarea {
 }
 
 .comment-date {
-  font-size: 12px;
+  font-size: 10px;
   color: #999;
-  text-align: right
+  text-align: right;
+  padding-top:1px;
 }
 
 .comment-text {
   line-height: 1.5;
   margin-bottom: 5px;
   text-align: left;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .delete-comment-btn {
@@ -513,7 +513,7 @@ textarea {
   grid-template-columns: minmax(200px, 1fr) 820px minmax(200px, 1fr);
   gap: 10px;
   width: 100%;
-  height: 570px;
+  height: 540px;
   padding-top: 10px;
   padding-left: 20px;
   padding-right: 20px;
@@ -567,6 +567,13 @@ p{
   position: relative;
   width: 100%;
   height: 100%;
+  border: none;
+  max-width: 820px;
+}
+
+.game-frame-wrapper iframe {
+  width: 100%;
+  aspect-ratio: 16/9;
   border: none;
 }
 
@@ -769,7 +776,7 @@ strong {
 }
 
 .timeline-item.expanded .timeline-details {
-  max-height: 700px;
+  max-height: 1000px;
   opacity: 1;
   margin-top: 15px;
 }
@@ -878,9 +885,10 @@ strong {
   background: transparent;
   color: white;
   border: none;
-  font-size: 2rem;
+  font-size: 1.5rem;
   cursor: pointer;
   transform: translateX(170%);
+  padding-left: 10px;
 }
 
 .button-link {
@@ -943,6 +951,10 @@ strong {
   color: #fff;
 }
 
+.navbar-title{
+  margin-left: 10px;
+}
+
 /* 모바일 반응형 */
 @media (max-width: 768px) {
   .navbar {
@@ -968,11 +980,9 @@ strong {
 
   .page-container {
     padding-top: 10px !important;
-  }
-
-  .page-container {
-    padding-left: 10px !important;
-    padding-right: 25px !important;
+    margin: 0 auto !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
 
   ul {
@@ -1103,13 +1113,19 @@ strong {
     transform: none !important;
   }
 
-  .sort-container-portal{
-    margin-left: 140px !important;
-    margin-top: 50px !important;
+ .sort-container-portal {
+    left: auto !important;
+    right: 1.2rem !important;
+    top: 5px !important;
+    transform: none !important;
   }
   
   .sort-dropdown {
     font-size : 12px !important;
     padding: 5px 4px !important;
   }
+
+  .game-frame-wrapper iframe {
+  height: auto !important;
+}
 }

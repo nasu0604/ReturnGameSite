@@ -1,0 +1,11 @@
+{
+      "id": "swims",
+      "name": "SWIMS",
+      "main_desc": "리겜",
+      "imagePath": "/unity/swimsforweb/image.png",
+      "iframeSrc": "/unity/swimsforweb/index.html",
+      "difficulty": 2,
+      "developer": "rlatlqkf",
+      "date":250518,
+      "how": "마우스로 노트에게 다가가 타격하는 리듬게임 입니다. 기본 조작법은 Z, X, 마우스입니다. (게임을 플레이하기 위해 .swm 파일이 필요합니다. https://swims.zunda.party에서 다운받을 수 있습니다 <- 만드는 중 현재는 하나의 맵만 플레이 가능)"
+    },

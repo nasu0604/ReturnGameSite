@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo} from 'react';
-import {createPortal} from 'react-dom';
+import { createPortal } from 'react-dom';
 import { db, collection, doc, getDoc, setDoc, onSnapshot } from './firebase';
 import { updateDoc, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
+import ScrollToTop from './ScrollToTop';
 import projectsData from './projects.json';
 import timelineData from './timelineData.json';
 import './App.css';
@@ -14,7 +15,7 @@ function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
   return (
     <div className="photo-modal-overlay">
       <div className="photo-modal">
-        <button className="close-button" onClick={onClose}>×</button>
+        <button className="close-button" onClick={onClose}>x</button>
         <img
           src={photos[currentIndex]}
           alt={`Slide ${currentIndex + 1}`}
@@ -29,24 +30,47 @@ function PhotoModal({ photos, currentIndex, onClose, onPrev, onNext }) {
   );
 }
 
-// 줄바꿈 함수
+// 줄바꿈 함수 + 링크 자동 삽입
 const formatTextWithLineBreaks = (text) => {
-  const regex = /(\{[^}]+\})/g;
-  return text.split(regex).map((segment, index) => {
-    if (regex.test(segment)) {
-      return <span key={index} className="gray-text">{segment}</span>;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const curlyRegex = /(\{[^}]+\})/g;
+  return text.split(curlyRegex).map((segment, index) => {
+    if (curlyRegex.test(segment)) {
+      return (
+        <span key={index} className="gray-text">
+          {segment}
+        </span>
+      );
     }
-    const lines = segment.split('\n');
-    return (
-      <span key={index}>
-        {lines.map((line, i) => (
-          <React.Fragment key={i}>
-            {line}
-            {i < lines.length - 1 && <br />}
-          </React.Fragment>
-        ))}
-      </span>
-    );
+
+    // URL 감지 + 줄바꿈 처리
+    return segment.split(urlRegex).map((part, idx) => {
+      if (urlRegex.test(part)) {
+        // 링크로 변환
+        return (
+          <a
+            key={`${index}-${idx}`}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {part}
+          </a>
+        );
+      }
+      // 줄바꿈 처리
+      const lines = part.split('\n');
+      return (
+        <span key={`${index}-${idx}`}>
+          {lines.map((line, i) => (
+            <React.Fragment key={i}>
+              {line}
+              {i < lines.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </span>
+      );
+    });
   });
 };
 
@@ -298,6 +322,16 @@ function Project() {
 
 // 프로젝트 상세 페이지
 function ProjectDetails() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // URL 파라미터로 프로젝트 식별자 가져오기
   const { projectName } = useParams();
   const project = projectsData.find((p) => p.id === projectName);
@@ -444,9 +478,11 @@ function ProjectDetails() {
             <h2>게임 방법</h2>
             <p>{formatTextWithLineBreaks(project.how)}</p>
             <h6>
-              {project.caution
-                ? `※ ${project.caution}`
-                : '※ 게임 해상도에 오류가 있을 경우, 전체화면을 권장합니다'}
+              {isMobile
+                ? '대부분의 게임은 모바일 환경에서 원활히 작동하지 않을 수 있습니다.'
+                : project.caution
+                  ? formatTextWithLineBreaks(project.caution)
+                  : ''}
             </h6>
           </div>
           <div className="game-info">
@@ -471,13 +507,25 @@ function ProjectDetails() {
         {/* 중앙: 게임 플레이 */}
         <div className="game-container">
           <div className="game-frame-wrapper">
-            <iframe
-              src={project.iframeSrc}
-              frameBorder="0"
-              scrolling="no"
-              title={project.name}
-              className="game-iframe"
-            />
+            {project.embedType === 'youtube' ? (
+              <iframe
+                width="820px"
+                height="461.25px"
+                src={`https://www.youtube.com/embed/${project.youtubeId}`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={project.name}
+              />
+            ) : (
+              <iframe
+                src={project.iframeSrc}
+                frameBorder="0"
+                scrolling="no"
+                title={project.name}
+                className="game-iframe"
+              />
+            )}
           </div>
           <p className="game-description">{project.description}</p>
         </div>
@@ -543,11 +591,12 @@ function ProjectDetails() {
                           {new Date(comment.timestamp).toLocaleDateString()}{' '}
                           {new Date(comment.timestamp).toLocaleTimeString([], {
                             hour: '2-digit',
-                            minute: '2-digit',
+                            minute: '2-digit'
                           })}
                         </span>
                       </div>
-                      <p className="comment-text">{comment.text}</p>
+                      <p className="comment-text">{formatTextWithLineBreaks(comment.text)}</p>
+                      <br/>
                       <button
                         onClick={() => handleDeleteComment(comment.id)}
                         className="delete-comment-btn"
@@ -933,6 +982,7 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="App">
         <Navbar />
         <AnimatedRoutes />
