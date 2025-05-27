@@ -139,14 +139,25 @@ function Home() {
         >
           동아리 인스타그램
         </a>
+        <a 
+          href="https://github.com/KH-ReturnGame" 
+          className="home-link-box" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          동아리 깃허브
+        </a>
         <Link to="/project" className="home-link-box">
           프로젝트 둘러보기
         </Link>
         <Link to="/introduce" className="home-link-box">
-          동아리 연혁 보기
+          동아리 연혁보기
         </Link>
-      </div>
       <AdFitBanner />
+      </div>
+      <div className="home-description">
+      사이트 문의 : @_return_game_
+      </div>
     </div>
   );
 }
@@ -978,6 +989,41 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
   );
 }
 
+// 푸터 컴포넌트
+function Footer() {
+  return (
+    <footer className="footer">
+      <div className="footer-container">
+        <div className="footer-left">
+          <div className="footer-brand">
+            <span>return Game;</span>
+            <div className="social-buttons">
+              <a href="https://www.instagram.com/_return_game_" target="_blank" rel="noopener noreferrer">
+                <img src="/logo_insta.svg" alt="Instagram" />
+              </a>
+              <a href="https://github.com/KH-ReturnGame" target="_blank" rel="noopener noreferrer">
+                <img src="/logo_github.svg" alt="GitHub" />
+              </a>
+            </div>
+          </div>
+          <nav className="footer-nav">
+            <Link to="/">홈</Link>
+            <Link to="/project">프로젝트</Link>
+            <Link to="/introduce">소개</Link>
+          </nav>
+        </div>
+        <div className="footer-right">
+          <p className="footer-text">
+            사이트 내 <a href="/sources.txt" className="underline-link">일부 외부 자료</a>의 저작권은 해당 원저작자에게 있으며,<br/>
+            본 동아리는 이를 교육 및 비영리적 학습 목적으로만 사용하였습니다.<br/>
+            Copyright © 2025 return Games; All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 // App
 function App() {
   return (
@@ -986,6 +1032,7 @@ function App() {
       <div className="App">
         <Navbar />
         <AnimatedRoutes />
+        <Footer />
       </div>
     </Router>
   );
