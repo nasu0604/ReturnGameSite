@@ -155,9 +155,6 @@ function Home() {
         </Link>
       <AdFitBanner />
       </div>
-      <div className="home-description">
-      사이트 문의 : @_return_game_
-      </div>
     </div>
   );
 }
@@ -1016,7 +1013,7 @@ function Footer() {
           <p className="footer-text">
             사이트 내 <a href="/sources.txt" className="underline-link">일부 외부 자료</a>의 저작권은 해당 원저작자에게 있으며,<br/>
             본 동아리는 이를 교육 및 비영리적 학습 목적으로만 사용하였습니다.<br/>
-            Copyright © 2025 return Games; All rights reserved.
+            Copyright © 2025 return Game, All rights reserved.
           </p>
         </div>
       </div>

@@ -21,7 +21,7 @@
 }
 
 .home-links .adfit-container{
-  top: 300px;
+  top: 240px;
 }
 
 .adfit-container {
@@ -87,6 +87,12 @@ body {
   font-weight: 500;
   position: relative;
   font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
 }
 
 .navbar-links .nav-link::after {
@@ -216,6 +222,12 @@ ul li a {
   width: 100%;
   text-decoration: none;
   color: #000;
+  transition: all 0.3s ease;
+}
+
+.project-item:hover {
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
 }
 
 .project-image-container {
@@ -953,7 +965,7 @@ strong {
   background-color: #111;
   cursor: pointer;
   color: #fff;
-  margin-top: 10px;
+  margin-top: 11px;
 }
 
 .sort-dropdown:focus {
@@ -967,6 +979,11 @@ strong {
 
 .navbar-title{
   margin-left: 10px;
+  transition: all 0.3s ease;
+}
+
+.navbar-title:hover {
+  opacity: 0.8;
 }
 
 .footer {
@@ -993,6 +1010,10 @@ strong {
   cursor: pointer;
 }
 
+.underline-link:hover {
+  font-weight: 700;
+}
+
 .social-buttons {
   margin-left: 5px;
 }
@@ -1003,6 +1024,16 @@ strong {
   height: 24px;
   margin-left: 15px;
   margin-top: 10px;
+}
+
+.social-buttons a:hover {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.social-buttons a {
+  opacity: 1;
+  transition: opacity 0.3s ease;
 }
 
 .social-buttons img {
@@ -1027,20 +1058,27 @@ strong {
   margin-top: 7px;
   margin-left: 0;
 }
+
 .footer-nav a {
   margin-right: 16px;
   color: #000;
   text-decoration: none;
   font-weight: 500;
 }
+
+.footer-nav a:hover {
+  font-weight: bold;
+}
+
 .footer-right {
   flex: 0 1 auto;
-  text-align: right;  
+  text-align: right; 
 }
+
 .footer-text {
   line-height: 1.6;
   font-weight: 300;
-  margin-top:0;
+  margin-top: 0;
 }
 
 /* 모바일 반응형 */
@@ -1068,14 +1106,15 @@ strong {
   }
 
   .adfit-container{
-    top: 0;
+    top: 0px;
     width: 100% !important;
-    padding-right: 40px;
+    padding-right: 0px !important;
     margin-top: 10px;
+    left:0px !important;
   }
 
   .home-links .adfit-container{
-    top: 500px;
+    top: 450px;
   }
 
   .page-container {
@@ -1237,9 +1276,15 @@ strong {
     text-align: center;
   }
   .footer-nav {
-    margin: 12px 0;
+    margin-top: 12px;
+    margin-bottom: 0px;
   }
   .footer-right {
+    align-self: flex-end;
     margin-top: 20px;
+  }
+
+  .footer-text{
+    font-size: 12px;
   }
 }
