@@ -126,35 +126,61 @@ const AdFitBanner = ({
 
 // 메인 페이지
 function Home() {
-  return (
-    <div className="page-container">
-      <h1>@return Game;</h1>
-      <h5>경희고등학교 게임 개발 동아리</h5>
-      <div className="home-links">
-        <a 
-          href="https://www.instagram.com/_return_game_" 
-          className="home-link-box" 
-          target="_blank" 
-          rel="noopener noreferrer"
-        >
-          동아리 인스타그램
-        </a>
-        <a 
-          href="https://github.com/KH-ReturnGame" 
-          className="home-link-box" 
-          target="_blank" 
-          rel="noopener noreferrer"
-        >
-          동아리 깃허브
-        </a>
-        <Link to="/project" className="home-link-box">
-          프로젝트 둘러보기
-        </Link>
-        <Link to="/introduce" className="home-link-box">
-          동아리 연혁보기
-        </Link>
-      <AdFitBanner />
+  const SHOW_HOME_AD = false;
+
+  
+  const TITLE_TEXT = '@return Game;';
+  const [titleIndex, setTitleIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // 접근성: reduce motion 환경에서는 정적으로 표시
+    if (prefersReducedMotion) {
+      if (titleIndex !== TITLE_TEXT.length) setTitleIndex(TITLE_TEXT.length);
+      return;
+    }
+
+    const typeSpeed = isDeleting ? 70 : 135;
+    const pauseAfterTyped = 2000;
+    const pauseAfterDeleted = 350;
+
+    let t;
+    if (!isDeleting && titleIndex === TITLE_TEXT.length) {
+      t = window.setTimeout(() => setIsDeleting(true), pauseAfterTyped);
+    } else if (isDeleting && titleIndex === 0) {
+      t = window.setTimeout(() => setIsDeleting(false), pauseAfterDeleted);
+    } else {
+      t = window.setTimeout(
+        () => setTitleIndex(i => i + (isDeleting ? -1 : 1)),
+        typeSpeed
+      );
+    }
+
+    return () => window.clearTimeout(t);
+  }, [TITLE_TEXT, titleIndex, isDeleting]);
+
+  const typedTitle = TITLE_TEXT.slice(0, titleIndex);
+
+return (
+    <div className="page-container home-page">
+      <div className="home-hero">
+        <p className="home-tagline">2025학년도 제44회 경황제</p>
+        <h1 className="home-title"><span className="home-title-typing" aria-label="@return Game;">{typedTitle}</span></h1>
+        <p className="home-subtitle">경희고등학교 게임 개발 동아리</p>
       </div>
+      <div className="home-links">
+        <Link to="/project" className="home-link-box">
+        <span className="material-icons cta-arrow-icon">arrow_forward</span>
+          게임 체험하러 가기
+        </Link>
+      </div>
+
+      {SHOW_HOME_AD && <AdFitBanner />}
     </div>
   );
 }
@@ -280,7 +306,7 @@ function Project() {
   return (
     <>
       {dropdownPortal}
-      <div className="page-container">
+      <div className="page-container project-page">
         <ul>
           {sortedProjects.map(project => (
             <li key={project.id}>
@@ -300,9 +326,6 @@ function Project() {
                   <div className="project-text-row">
                     <div className="project-title">
                       {project.name}
-                      {project.date === 2025 && (
-                        <span className="new-badge">N</span>
-                      )}
                     </div>
                     <div className="project-rating">
                       ★ {getAverageRating(project.id)}
@@ -324,6 +347,9 @@ function Project() {
           ))}
         </ul>
       </div>
+        <Link to="/" className="floating-home-btn" aria-label="메인으로">
+          <span className="material-icons">home</span>
+        </Link>
     </>
   );
 }
@@ -469,7 +495,7 @@ function ProjectDetails() {
   // 프로젝트 상세 페이지 UI
   return (
     <div className="page-container project-details-page">
-      <div className="mobile-ad-container">
+      {/* <div className="mobile-ad-container">
         <AdFitBanner
           adUnit="DAN-5HHAjw0y2pRiS3R9"
           width={320}
@@ -478,7 +504,7 @@ function ProjectDetails() {
           mobileWidth={320}
           mobileHeight={100}
         />
-      </div>  
+      </div>   */}
       <div className="project-layout">
         {/* 왼쪽: 게임 방법 및 게임 정보 */}
         <div className="game-instructions">
@@ -541,15 +567,6 @@ function ProjectDetails() {
         {/* 오른쪽: 평점 및 댓글 */}
         <div className="ratings-comments-wrapper">
           <div className="ratings-comments">
-            <div className="rating-container">
-              <h2>평점</h2>
-              <StarRating
-                projectId={project.id}
-                initialRating={userRating}
-                onRatingChange={handleRatingChange}
-              />
-            </div>
-
             <div className="comments-section">
               {/* 댓글 입력 폼 */}
               <h2>댓글</h2>
@@ -625,13 +642,13 @@ function ProjectDetails() {
           </div>
         </div>
       </div>
-      <div className="pc-ad-container">
+      {/* <div className="pc-ad-container">
         <AdFitBanner
           adUnit="DAN-cbhNH2DQGsz5BG5u"
           width={728}
           height={90}
         />
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -763,10 +780,8 @@ function Navbar() {
 
 // Animation
 function AnimatedRoutes() {
-  // 페이지 전환 시 애니메이션 효과
   const location = useLocation();
-  
-  // 페이지 전환 애니메이션
+
   return (
     <div className="content">
       <Routes location={location}>
@@ -809,7 +824,6 @@ function AnimatedRoutes() {
 
 // 별점 컴포넌트
 function StarRating({ projectId, initialRating = 0, onRatingChange }) {
-  // 별점 상태 관리
   const [rating, setRating] = useState(initialRating);
   const [hover, setHover] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
@@ -818,7 +832,6 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
   const [cooldown, setCooldown] = useState(0);
   const [isRatingAllowed, setIsRatingAllowed] = useState(true);
 
-  // IP 가져오기
   useEffect(() => {
     fetch('https://api.ipify.org?format=json')
       .then(response => response.json())
@@ -832,12 +845,10 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
       });
   }, [projectId]);
 
-  // 받은 초기값이 바뀌면 상태 반영
   useEffect(() => {
     setRating(initialRating);
   }, [initialRating]);
 
-  // 쿨다운 타이머
   useEffect(() => {
     let timer;
     if (cooldown > 0) {
@@ -859,26 +870,22 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
     };
   }, [cooldown]);
 
-  // 평가 가능 여부 확인
   const checkRatingEligibility = async (ip) => {
     if (!ip) return;
 
     try {
-      // IP별 평가 기록 문서 참조
       const ipRatingsRef = doc(collection(db, 'ipRatings'), ip);
       const docSnap = await getDoc(ipRatingsRef);
-      
+
       if (docSnap.exists()) {
         const data = docSnap.data();
         const projectRating = data[projectId];
-        
-        // 해당 프로젝트에 대한 평가 기록이 있는지 확인
+
         if (projectRating) {
           const lastRatedTime = projectRating.timestamp;
           const currentTime = Date.now();
           const elapsedSeconds = Math.floor((currentTime - lastRatedTime) / 1000);
-          
-          // 60초 이내에 평가했는지 확인
+
           if (elapsedSeconds < 60) {
             const remainingSeconds = 60 - elapsedSeconds;
             setCooldown(remainingSeconds);
@@ -890,16 +897,14 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
           setIsRatingAllowed(true);
         }
       } else {
-        // 첫 평가인 경우
         setIsRatingAllowed(true);
       }
     } catch (error) {
       console.error('평가 가능 여부 확인 중 오류 발생:', error);
-      setIsRatingAllowed(true); // 오류 시 기본적으로 허용
+      setIsRatingAllowed(true);
     }
   };
 
-  // 별 클릭 이벤트
   const handleClick = async (starValue) => {
     if (!userIp) {
       setPopupMessage('IP 정보를 가져오는 중입니다. 잠시 후 다시 시도해주세요.');
@@ -916,16 +921,13 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
     }
 
     try {
-      // 평점 업데이트
       setRating(starValue);
-      onRatingChange(projectId, starValue); // firestore에 저장
-      
-      // IP 기록 업데이트
+      onRatingChange(projectId, starValue);
+
       const ipRatingsRef = doc(collection(db, 'ipRatings'), userIp);
       const docSnap = await getDoc(ipRatingsRef);
-      
+
       if (docSnap.exists()) {
-        // 기존 문서 업데이트
         await updateDoc(ipRatingsRef, {
           [projectId]: {
             rating: starValue,
@@ -933,7 +935,6 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
           }
         });
       } else {
-        // 새 문서 생성
         await setDoc(ipRatingsRef, {
           [projectId]: {
             rating: starValue,
@@ -941,12 +942,10 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
           }
         });
       }
-      
-      // 쿨다운 시작
+
       setCooldown(60);
       setIsRatingAllowed(false);
-      
-      // 성공 메시지 표시
+
       setPopupMessage('평가가 완료되었습니다!');
       setShowPopup(true);
       setTimeout(() => setShowPopup(false), 2000);
@@ -958,7 +957,6 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
     }
   };
 
-  // 평점 UI
   return (
     <div>
       <div className="star-rating">
@@ -1027,9 +1025,9 @@ function App() {
     <Router>
       <ScrollToTop />
       <div className="App">
-        <Navbar />
+        {/* <Navbar /> */}
         <AnimatedRoutes />
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </Router>
   );
