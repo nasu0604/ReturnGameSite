@@ -177,6 +177,10 @@ return (
         <span className="material-icons cta-arrow-icon">arrow_forward</span>
           게임 체험하러 가기
         </Link>
+        <Link to="/introduce" className="introduce-link-box">
+        <span className="material-icons cta-arrow-icon">arrow_forward</span>
+          동아리 소개 보기
+        </Link>
       </div>
 
       {SHOW_HOME_AD && <AdFitBanner />}
