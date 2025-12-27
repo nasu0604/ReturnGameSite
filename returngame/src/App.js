@@ -179,7 +179,7 @@ return (
         </Link>
         <Link to="/introduce" className="introduce-link-box">
         <span className="material-icons cta-arrow-icon">arrow_forward</span>
-          동아리 소개 보기
+          동아리 연혁 보기
         </Link>
       </div>
 
