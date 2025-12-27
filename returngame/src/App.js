@@ -139,7 +139,6 @@ function Home() {
       window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // 접근성: reduce motion 환경에서는 정적으로 표시
     if (prefersReducedMotion) {
       if (titleIndex !== TITLE_TEXT.length) setTitleIndex(TITLE_TEXT.length);
       return;
@@ -328,10 +327,13 @@ function Project() {
                       {project.name}
                     </div>
                     <div className="project-rating">
-                      ★ {getAverageRating(project.id)}
-                      <span className="rating-count">
-                        ({getRatingCount(project.id)})
+                      <span
+                        className="material-icons"
+                        style={{ fontSize: '18px', marginRight: '4px', color: 'var(--text-dim)', position: 'relative', top: '4px'}}
+                      >
+                        visibility
                       </span>
+                      { viewCounts[project.id] || 0}
                     </div>
                   </div>
                   <div className="project-text-row">
@@ -492,6 +494,9 @@ function ProjectDetails() {
 
   const userRating = ratings.length > 0 ? ratings[ratings.length - 1] : 0;
 
+  const difficultyValue = Math.max(0, Math.min(5, Number(project.difficulty) || 0));
+  const difficultyStars = '★'.repeat(difficultyValue) + '☆'.repeat(5 - difficultyValue);
+
   // 프로젝트 상세 페이지 UI
   return (
     <div className="page-container project-details-page">
@@ -505,151 +510,138 @@ function ProjectDetails() {
           mobileHeight={100}
         />
       </div>   */}
-      <div className="project-layout">
-        {/* 왼쪽: 게임 방법 및 게임 정보 */}
-        <div className="game-instructions">
-          <div className="instruction-box">
-            <h2>게임 방법</h2>
-            <p>{formatTextWithLineBreaks(project.how)}</p>
-            <h6>
-              {isMobile
-                ? '대부분의 게임은 모바일 환경에서 원활히 작동하지 않을 수 있습니다.'
-                : project.caution
-                  ? formatTextWithLineBreaks(project.caution)
-                  : ''}
-            </h6>
-          </div>
-          <div className="game-info">
-            <h2>게임 정보</h2>
-            <p>
-              <strong>난이도:</strong>
-              {[...Array(5)].map((_, index) => (
-                <span key={index} style={{ marginLeft: '5px' }}>
-                  {index < project.difficulty ? '★' : '☆'}
-                </span>
-              ))}
-            </p>
-            <p>
-              <strong>개발자:</strong> {project.developer}
-            </p>
-            <p>
-              <strong>개발연도:</strong> {project.date}
-            </p>
-          </div>
-        </div>
+            <div className="project-layout">
+        <div className="game-left">
+          {/* 중앙: 게임 플레이 */}
+          <div className="game-container">
+                    <div className="game-frame-wrapper">
+                      {project.embedType === 'youtube' ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${project.youtubeId}`}
+                          className="game-iframe"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title={project.name}
+                        />
+                      ) : (
+                        <iframe
+                          src={project.iframeSrc}
+                          frameBorder="0"
+                          scrolling="no"
+                          title={project.name}
+                          className="game-iframe"
+                        />
+                      )}
+                    </div>
+                    <p className="game-description">{project.description}</p>
+                  </div>
 
-        {/* 중앙: 게임 플레이 */}
-        <div className="game-container">
-          <div className="game-frame-wrapper">
-            {project.embedType === 'youtube' ? (
-              <iframe
-                width="820px"
-                height="461.25px"
-                src={`https://www.youtube.com/embed/${project.youtubeId}`}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={project.name}
-              />
-            ) : (
-              <iframe
-                src={project.iframeSrc}
-                frameBorder="0"
-                scrolling="no"
-                title={project.name}
-                className="game-iframe"
-              />
-            )}
-          </div>
-          <p className="game-description">{project.description}</p>
+          {/* 왼쪽: 게임 방법 및 게임 정보 */}
+          <div className="game-instructions">
+                    <div className="instruction-box">
+                      <div className="instruction-header-row">
+                        <div className="instruction-header-left">
+                          <span className="instruction-game-title">{project.name}</span>
+                          <span className="instruction-game-desc">{project.main_desc}</span>
+                        </div>
+                        <div className="instruction-header-right">
+                          <span className="instruction-developer">{project.developer}</span>
+                          <span className="instruction-difficulty">{difficultyStars}</span>
+                        </div>
+                      </div>
+                      <p className="instruction-how">{formatTextWithLineBreaks(project.how)}</p>
+                    </div>
+                  </div>
         </div>
 
         {/* 오른쪽: 평점 및 댓글 */}
         <div className="ratings-comments-wrapper">
-          <div className="ratings-comments">
-            <div className="comments-section">
-              {/* 댓글 입력 폼 */}
-              <h2>댓글</h2>
-              <form onSubmit={handleAddComment} className="comment-form">
-                <div className="horizontal-inputs">
-                  <input
-                    type="text"
-                    value={commentAuthor}
-                    onChange={(e) => setCommentAuthor(e.target.value)}
-                    placeholder="닉네임"
-                    className="author-input"
-                  />
-                  <input
-                    type="password"
-                    value={commentPassword}
-                    onChange={(e) => setCommentPassword(e.target.value)}
-                    placeholder="비밀번호"
-                    className="password-input"
-                    required
-                  />
-                </div>
+                  <div className="ratings-comments">
+                    <div className="comments-section">
+                      {/* 댓글 입력 폼 */}
+                      {/* <h2>댓글</h2> */}
+                      <form onSubmit={handleAddComment} className="comment-form">
+                        <div className="horizontal-inputs">
+                          <input
+                            type="text"
+                            value={commentAuthor}
+                            onChange={(e) => setCommentAuthor(e.target.value)}
+                            placeholder="닉네임"
+                            className="author-input"
+                          />
+                          <input
+                            type="password"
+                            value={commentPassword}
+                            onChange={(e) => setCommentPassword(e.target.value)}
+                            placeholder="비밀번호"
+                            className="password-input"
+                            required
+                          />
+                        </div>
 
-                {/* 댓글 내용 */}
-                <div className="input-group">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="댓글을 입력하세요..."
-                    className="comment-input"
-                    required
-                  />
-                </div>
+                        {/* 댓글 내용 */}
+                        <div className="input-group">
+                          <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                                handleAddComment(e);
+                              }
+                            }}
+                            placeholder="댓글을 입력해주세요 (Enter로 등록)"
+                            className="comment-input"
+                            required
+                          />
+                        </div>
+                      </form>
 
-                <button type="submit" className="comment-submit-btn">
-                  댓글 작성
-                </button>
-              </form>
-
-              {/* 댓글 리스트 */}
-              <div className="comments-list">
-                {comments.length > 0 ? (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="comment-item">
-                      <div className="comment-header">
-                        <strong>{comment.author}</strong>
-                        <span className="comment-date">
-                          {new Date(comment.timestamp).toLocaleDateString()}{' '}
-                          {new Date(comment.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
+                      {/* 댓글 리스트 */}
+                      <div className="comments-list">
+                        {comments.length > 0 ? (
+                          comments.map((comment) => (
+                            <div key={comment.id} className="comment-item">
+                              <div className="comment-header">
+                                <strong>{comment.author}</strong>
+                                <span className="comment-date">
+                                  {new Date(comment.timestamp).toLocaleDateString()}{' '}
+                                  {new Date(comment.timestamp).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                              <p className="comment-text">{formatTextWithLineBreaks(comment.text)}</p>
+                              <br/>
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="delete-comment-btn"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="no-comments">
+                            아직 댓글이 없습니다.
+                            <br />
+                            첫 댓글을 남겨보세요!
+                          </p>
+                        )}
                       </div>
-                      <p className="comment-text">{formatTextWithLineBreaks(comment.text)}</p>
-                      <br/>
-                      <button
-                        onClick={() => handleDeleteComment(comment.id)}
-                        className="delete-comment-btn"
-                      >
-                        삭제
-                      </button>
                     </div>
-                  ))
-                ) : (
-                  <p className="no-comments">
-                    아직 댓글이 없습니다.
-                    <br />
-                    첫 댓글을 남겨보세요!
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+                  </div>
+                </div>
       </div>
-      {/* <div className="pc-ad-container">
+{/* <div className="pc-ad-container">
         <AdFitBanner
           adUnit="DAN-cbhNH2DQGsz5BG5u"
           width={728}
           height={90}
         />
       </div> */}
-      <Link to="/" className="floating-rewind-btn" aria-label="앞으로">
+      <Link to="/project" className="floating-rewind-btn" aria-label="앞으로">
         <span className="material-icons">fast_rewind</span>
       </Link>
     </div>

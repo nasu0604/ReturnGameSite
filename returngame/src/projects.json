@@ -1,15 +1,15 @@
 [
   {
-    "id": "ANTIPITALISM",
-    "name": "ANTIPITALISM(개미탈리즘)",
-    "main_desc": "주식게임을 가장한 도박게임",
-    "imagePath": "/unity/ANTIPITALISM/ANTIPITALISM_Thumb.png",
-    "iframeSrc": "/unity/ANTIPITALISM/index.html",
-    "difficulty": 1,
-    "developer": "이호진 홍기현 윤채훈",
+    "id": "RasingTier",
+    "name": "RasingTier",
+    "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+    "imagePath": "/unity/RasingTier/RasingTier.png",
+    "iframeSrc": "/unity/RasingTier/index.html",
+    "difficulty": 3,
+    "developer": "나선욱",
     "date": 2025,
     "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
-    "how": "1.저축을 이용한 안전한 돈벌기\n2.주식과 뉴스를 이용한 전략적인 돈벌기\n3.도박을 이용한 위험한 돈벌기"
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
   },
   {
     "id": "RasingTier",
@@ -21,83 +21,78 @@
     "developer": "나선욱",
     "date": 2025,
     "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
-    "how": "1.좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
   },
   {
-    "id": "daedooSimulator",
-    "name": "머리강화시뮬레이터",
-    "main_desc": "머리와 강화를 결합한 퓨전 확률갓겜!",
-    "imagePath": "/unity/daedooSimulator/daedooSimulator.png",
-    "iframeSrc": "/unity/daedooSimulator/index.html",
-    "difficulty": 2,
-    "developer": "김강민",
-    "date": 2025,
-    "how": "강화하라. \n 초월하라.\n 쟁취하라."
-  },
-  {
-      "id": "TankGame",
-      "name": "TankGame",
-      "main_desc": "적을 공격하거나 피하여 스테이지를 클리어하는 방식의 게임",
-      "imagePath": "/unity/TankGame/TankGame.png",
-      "iframeSrc": "/unity/TankGame/index.html",
-      "difficulty": 3,
-      "developer": "최형원",
-      "date":2025,
-      "how": "1. 방향키로 이동한다.\n2. 스페이스키로 공격한다.\n3. 게임오버되지 않고 피니쉬 포인트에 도달하면 다음 스테이지로 넘어간다.\n4. 총 3개의 스테이지를 모두 클리어하면 게임이 끝나게 된다. 버튼을 눌러 재시작할 수 있다."
-  },
-  {
-    "id": "starcatch",
-    "name": "스타캐치",
-    "main_desc": "당신의 반응속도를 극한으로 활용하라!",
-    "imagePath": "/unity/starcatch/starcatch.png",
-    "iframeSrc": "/unity/starcatch/index.html",
-    "difficulty": 2,
-    "developer": "손지호",
-    "date": 2025,
-    "how": "1. 스타트 버튼을 누른다. \n 2. 움직이는 별이 노란색 기준선에 오는 타이밍에 맞춰 스페이스바를 누른다. \n 3. 10번 반복하면 최종점수가 나온다(300점 만점)."
-  },
-  {
-    "id": "rG_A",
-    "name": "CPU",
-    "main_desc": "퍼즐을 풀며 스테이지를 클리어하세요!",
-    "imagePath": "/unity/rG_A/rG_A.png",
-    "iframeSrc": "/unity/rG_A/index.html",
-    "difficulty": 5,
-    "developer": "이건희 김강민 이호진",
-    "date": 2024,
-    "how": "1. 머리, 몸, 화살을 Shift를 통해 따로 조작하며 기믹을 활용해 게임을 클리어하자!\n2. 특정 버튼은 특정 문과 연결되어 있다!\n3. 머리와 몸이 결합된 상태여야 스테이지가 클리어 된다! \n결합은 머리와 몸이 상하로 붙도록 이동한 후 F로 가능하다. \n4. 분쇄기에 머리나 몸의 발이 닿으면 스테이지 실패!\n5. 화살을 파괴시킬 수 있는 타일이 있으니 조심할 것!"
-  },
-   {
-    "id": "rG_B",
-    "name": "BlooDash",
-    "main_desc": "대쉬 기능을 사용해 탈출하세요!",
-    "imagePath": "/unity/rG_B/rG_B.png",
-    "iframeSrc": "/unity/rG_B/index.html",
+    "id": "RasingTier",
+    "name": "RasingTier",
+    "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+    "imagePath": "/unity/RasingTier/RasingTier.png",
+    "iframeSrc": "/unity/RasingTier/index.html",
     "difficulty": 3,
-    "developer": "이형주 손지호 윤채훈 오준석 이준혁",
-    "date": 2024,
-    "how": "1. WASD를 활용하여 이동하며 벽타기가 가능하다.\n2. Ctrl+Click으로 대쉬 및 공격하자\n3. 기본 모드와 함께 스피드런 모드도 함께 즐겨보자!"
+    "developer": "나선욱",
+    "date": 2025,
+    "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
   },
   {
-    "id": "rG_D",
-    "name": "젤리키우기",
-    "main_desc": "귀여운 젤리를 키워보세요!",
-    "imagePath": "/unity/rG_D/rG_D.png",
-    "iframeSrc": "/unity/rG_D/index.html",
-    "difficulty": 1,
-    "developer": "최성윤 조희성 김도윤",
-    "date": 2024,
-    "how": "젤리를 클릭하며 키워보세요!"
-  },
-  {
-    "id": "rG_E",
-    "name": "illusio",
-    "main_desc": "몰려오는 적들을 뚫고 살아나가세요!",
-    "imagePath": "/unity/rG_E/rG_E.png",
-    "iframeSrc": "/unity/rG_E/index.html",
+    "id": "RasingTier",
+    "name": "RasingTier",
+    "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+    "imagePath": "/unity/RasingTier/RasingTier.png",
+    "iframeSrc": "/unity/RasingTier/index.html",
     "difficulty": 3,
-    "developer": "황우진 이형주 오준석",
-    "date": 2024,
-    "how": "몰려오는 적들을 피하며 살아남자!"
+    "developer": "나선욱",
+    "date": 2025,
+    "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
+  },
+  {
+    "id": "RasingTier",
+    "name": "RasingTier",
+    "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+    "imagePath": "/unity/RasingTier/RasingTier.png",
+    "iframeSrc": "/unity/RasingTier/index.html",
+    "difficulty": 3,
+    "developer": "나선욱",
+    "date": 2025,
+    "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
+  },
+  {
+    "id": "RasingTier",
+    "name": "RasingTier",
+    "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+    "imagePath": "/unity/RasingTier/RasingTier.png",
+    "iframeSrc": "/unity/RasingTier/index.html",
+    "difficulty": 3,
+    "developer": "나선욱",
+    "date": 2025,
+    "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
+  },
+  {
+    "id": "RasingTier",
+    "name": "RasingTier",
+    "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+    "imagePath": "/unity/RasingTier/RasingTier.png",
+    "iframeSrc": "/unity/RasingTier/index.html",
+    "difficulty": 3,
+    "developer": "나선욱",
+    "date": 2025,
+    "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
+  },
+  {
+    "id": "RasingTier",
+    "name": "RasingTier",
+    "main_desc": "티어를 합쳐 최고 티어에 도달하라",
+    "imagePath": "/unity/RasingTier/RasingTier.png",
+    "iframeSrc": "/unity/RasingTier/index.html",
+    "difficulty": 3,
+    "developer": "나선욱",
+    "date": 2025,
+    "caution": "※ 오류가 발생한다면 Ctrl+Shift+R으로 새로고침 해주세요",
+    "how": "1. 좌측 하단의 슬링샷을 클릭한 뒤, 마우스를 드래그하여 티어의 발사 방향과 세기를 조절한다\n 2. 마우스 버튼을 놓으면 티어가 컨테이너 안으로 발사된다 \n 3. 같은 티어가 충돌하면 자동으로 한 단계 높은 티어로 합성되며 점수를 얻는다\n4. 티어가 좌,우,하단 화면 밖으로 튕겨나가면 목숨이 1개 차감된다\n5. 목숨 3개가 모두 소진되면 게임이 종료되고 최종 점수가 나타난다"
   }
 ]

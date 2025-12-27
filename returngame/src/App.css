@@ -118,7 +118,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Pretendard','';
+  font-family: 'Pretendard';
 }
 
 /* =========================
@@ -294,7 +294,6 @@ a:hover {
   padding-left: 20px;
   padding-right: 20px;
   padding-top: 10px;
-  margin-bottom: 20px;
 }
 
 .page-container.home-page {
@@ -303,7 +302,7 @@ a:hover {
 }
 
 .page-container.project-page {
-  min-height: calc(100vh - 70px); /* navbar 높이 제외 */
+  min-height: calc(100vh - 60px); /* navbar 높이 제외 */
   display: flex;
   align-items: center;      /* 세로 중앙 */
   justify-content: center;  /* 가로 중앙 */
@@ -351,12 +350,12 @@ h6 {
 }
 
 .korean-text {
-  font-family: 'Paperlogy-5Medium','Paperlogy-7Bold';
+  font-family: 'Pretendard';
   letter-spacing: -0.02em;
 }
 
 .english-text {
-  font-family: 'Paperlogy-5Medium','Paperlogy-7Bold';
+  font-family: 'Pretendard';
   letter-spacing: 0.01em;
 }
 
@@ -629,7 +628,7 @@ ul li a {
 }
 
 .project-item:hover {
-  opacity: 0.6;
+  opacity: 0.7;
   transition: opacity 0.3s ease;
 }
 
@@ -658,7 +657,7 @@ textarea {
 
 .game-iframe {
   border: 1px solid rgba(255,255,255,0.08);
-  margin-top: 10px;
+  margin-top: 0;
   border-radius: 10px;
 }
 
@@ -825,13 +824,12 @@ textarea {
 }
 
 .comments-section {
-  margin-top: 10px;
+  margin-top: 0;
   width: 100%;
 }
 
 .comment-form {
   margin-top: 10px;
-  margin-bottom: 10px;
   border-radius: 8px;
 }
 
@@ -849,7 +847,6 @@ textarea {
   background-color: var(--surface);
   width: 100%;
   min-height: 80px;
-  margin-bottom: 10px;
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -859,7 +856,7 @@ textarea {
 }
 
 .comment-submit-btn {
-  background: linear-gradient(135deg, rgba(140, 80, 255, 0.9), rgba(0, 255, 240, 0.55));
+  background: linear-gradient(215deg, rgba(140, 80, 255, 0.9), rgba(0, 255, 240, 0.55));
   color: white;
   border: none;
   padding: 10px 20px;
@@ -876,7 +873,7 @@ textarea {
 }
 
 .comments-list {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .comment-item {
@@ -886,7 +883,6 @@ textarea {
   padding: 15px;
   margin-bottom: 15px;
   position: relative;
-  box-shadow: var(--shadow-md);
 }
 
 .comment-header {
@@ -942,33 +938,98 @@ textarea {
 
 .project-layout {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) 820px minmax(200px, 1fr);
-  gap: 10px;
+  grid-template-columns: 1008px minmax(0, 1fr);
+  column-gap: 18px;
+  row-gap: 24px;
   width: 100%;
   padding-top: 10px;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 10px;
+  padding-right: 0;
+  align-items: start;
 }
 
+.game-left {
+  width: 1008px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 .game-instructions {
-  order: 1;
+  width: 100%;
+  max-width: 1008px;
 }
-
 .instruction-box {
-  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 16px;
-  padding: 15px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  box-shadow: var(--shadow-md);
+  padding-left: 10px;
+  padding-right: 15px;
   transition: all 0.3s ease;
-  background: var(--surface);
 }
 
 .instruction-box p {
   text-align: left;
   line-height: 1.8;
   color: var(--text);
+}
+
+
+/* ===== ProjectDetails: instruction header layout ===== */
+.instruction-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.instruction-header-left,
+.instruction-header-right {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.instruction-header-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.instruction-header-right {
+  justify-content: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+  transform: translateY(-10px);
+}
+
+.instruction-game-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.instruction-game-desc {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.instruction-developer {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.instruction-difficulty {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-right: 40px;
+}
+
+.instruction-how {
+  margin-top: 0;
+  font-size: 16px;
 }
 
 .game-info {
@@ -992,31 +1053,28 @@ p {
 }
 
 .game-container {
-  order: 2;
-  height: 520px;
-  width: 820px;
+  width: 100%;
+  max-width: 1008px;
+  height: 590px;
   border: none !important;
 }
-
 .game-frame-wrapper {
   position: relative;
   width: 100%;
-  height: 100%;
+  max-width: 1008px;
+  aspect-ratio: 16 / 9;
   border: none;
-  max-width: 820px;
 }
-
 .game-frame-wrapper iframe {
   width: 100%;
-  aspect-ratio: 16/9;
+  height: 630px;
   border: none;
 }
-
 .ratings-comments-wrapper {
   width: 100%;
-  order: 3;
+  min-width: 0;
+  align-self: start;
 }
-
 .game-frame-wrapper::before {
   content: "";
   display: block;
@@ -1037,18 +1095,18 @@ p {
 }
 
 .ratings-comments {
-  border: 1px solid rgba(255,255,255,0.10);
-  margin-top: 10px;
+  width: 100%;
+  margin-top: 0;
   border-radius: 16px;
   padding-left: 20px;
   padding-right: 20px;
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
-  margin-bottom: 40px;
-  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
 }
-
-
 .rating-container {
   border-radius: 8px;
   padding: 20px;
@@ -1057,13 +1115,30 @@ p {
 .comments-section {
   border-radius: 0px;
   border-color: rgba(255,255,255,0.10);
-  padding-top:20px;
 }
 
 .comments-list {
   flex: 1;
   overflow-y: auto;
 }
+
+.ratings-comments .comments-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ratings-comments .comment-form {
+  flex: 0 0 auto;
+}
+
+.ratings-comments .comments-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+
 
 strong {
   text-align: left;
@@ -1536,6 +1611,10 @@ strong {
     padding-right: 20px !important;
   }
 
+  .page-container.project-details-page {
+    padding: 5px !important;
+  }
+
   ul {
     grid-template-columns: 1fr !important;
     row-gap: 25px;
@@ -1550,40 +1629,16 @@ strong {
   .project-layout {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding-right: 5px;
-    padding-left: 5px;
+    gap: 20px;
+    padding: 0 10px;
   }
 
-  .game-container {
-    order: 1;
-    height: auto;
-    width: 100%;
-    max-width: 100%;
-    aspect-ratio: 16/9;
+  .project-details-page {
+    padding-top: 10px;
   }
 
-  .mobile-ad-container {
-    display: block !important;
-    position: static !important;
-    width: 100%;
-    text-align: center;
-  }
-
-  .game-instructions {
-    order: 3;
-  }
-  .ratings-comments-wrapper {
-    order: 4;
-  }
-
-  .pc-ad-container {
-    display: none;
-  }
-
-  .ratings-comments {
-    display: flex;
-    flex-direction: column-reverse;
+  .project-details-page .adfit-container {
+    display: none !important;
   }
 
   .timeline-container {
@@ -1679,6 +1734,46 @@ strong {
     z-index: 999;
     margin-top:85px;
   }
+
+  /* Mobile: place game title/desc on full width (avoid early wrap), and keep tabs below */
+  .instruction-header-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .instruction-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1 1 100%;
+  }
+  .instruction-header-right {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+  .instruction-game-title,
+  .instruction-game-desc {
+    display: block;
+    width: 100%;
+  }
+  .tab-buttons {
+    flex-wrap: wrap;
+  }
+
+  /* Mobile: Unity(WebGL) iframe + wrapper should never overflow horizontally */
+  .game-left {
+    width: 100% !important;
+  }
+  .game-container {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  .game-frame-wrapper {
+    max-width: 100% !important;
+  }
+  .game-frame-wrapper iframe {
+    height: 100% !important;
+  }
+
 }
 
 /* 프로젝트 리스트 페이지: 홈으로 이동 버튼 */
@@ -1713,8 +1808,8 @@ strong {
 
 .floating-rewind-btn {
   position: fixed;
-  left: 24px;
-  bottom: 24px;
+  right: 16px;
+  bottom: 16px;
   width: 56px;
   height: 56px;
   display: inline-flex;
@@ -1724,7 +1819,7 @@ strong {
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(2px);
   color: var(--text);
   text-decoration: none;
   z-index: 2000;
