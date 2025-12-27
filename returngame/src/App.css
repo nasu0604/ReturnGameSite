@@ -1710,3 +1710,32 @@ strong {
 .floating-home-btn .material-icons {
   font-size: 26px;
 }
+
+.floating-rewind-btn {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  text-decoration: none;
+  z-index: 2000;
+  transition: transform 220ms ease, filter 220ms ease;
+}
+
+.floating-rewind-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+}
+
+.floating-rewind-btn .material-icons {
+  font-size: 26px;
+}

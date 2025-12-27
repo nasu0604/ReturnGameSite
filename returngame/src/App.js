@@ -649,6 +649,9 @@ function ProjectDetails() {
           height={90}
         />
       </div> */}
+      <Link to="/" className="floating-rewind-btn" aria-label="앞으로">
+        <span className="material-icons">fast_rewind</span>
+      </Link>
     </div>
   );
 }
