@@ -9,7 +9,7 @@
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=800 height=450></canvas>
+      <canvas id="unity-canvas" width=1008 height=567></canvas>
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
@@ -20,7 +20,7 @@
       <div id="unity-footer">
         <div id="unity-webgl-logo"></div>
         <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">전체화면</div>
+        <div id="unity-build-title"></div>
       </div>
     </div>
     <script>
@@ -56,11 +56,11 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/rG_A.loader.js";
+      var loaderUrl = buildUrl + "/web1229.loader.js";
       var config = {
-        dataUrl: buildUrl + "/rG_A.data",
-        frameworkUrl: buildUrl + "/rG_A.framework.js",
-        codeUrl: buildUrl + "/rG_A.wasm",
+        dataUrl: buildUrl + "/web1229.data",
+        frameworkUrl: buildUrl + "/web1229.framework.js",
+        codeUrl: buildUrl + "/web1229.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "ReturnGame",
         productName: "rG_Project_A",
@@ -93,8 +93,8 @@
       } else {
         // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
 
-        canvas.style.width = "800px";
-        canvas.style.height = "450px";
+        canvas.style.width = "1008px";
+        canvas.style.height = "567px";
       }
 
       loadingBar.style.display = "block";

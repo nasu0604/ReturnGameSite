@@ -726,6 +726,9 @@ function Timeline() {
           }
         />
       )}
+      <Link to="/" className="floating-home-btn" aria-label="메인으로">
+        <span className="material-icons">home</span>
+      </Link>
     </div>
   );
 }

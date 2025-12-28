@@ -1077,7 +1077,7 @@ textarea {
   justify-content: flex-end;
   text-align: right;
   flex-shrink: 0;
-  transform: translateY(-10px);
+  transform: translateY(-3px);
 }
 
 .instruction-game-title {
