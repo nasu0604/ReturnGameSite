@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GameStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum UploadStatus {
+  RECEIVED
+  VALIDATING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Game {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  title            String
+  shortDescription String
+  description      String?
+  thumbnailUrl     String?
+  status           GameStatus    @default(DRAFT)
+  currentVersionId String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  versions         GameVersion[]
+  comments         Comment[]
+  ratings          Rating[]
+  uploads          Upload[]
+}
+
+model GameVersion {
+  id           String   @id @default(cuid())
+  gameId       String
+  versionLabel String
+  entryUrl     String
+  assetBaseUrl String
+  s3Prefix     String
+  manifest     Json?
+  createdAt    DateTime @default(now())
+  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, versionLabel])
+}
+
+model Upload {
+  id           String       @id @default(cuid())
+  gameId       String?
+  originalName String
+  status       UploadStatus @default(RECEIVED)
+  sourceKey    String?
+  resultPrefix String?
+  errorMessage String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  game         Game?        @relation(fields: [gameId], references: [id], onDelete: SetNull)
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  gameId    String
+  author    String
+  body      String
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  gameId    String
+  userKey   String
+  score     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userKey])
+}
