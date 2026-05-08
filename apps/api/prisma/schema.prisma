@@ -21,19 +21,48 @@ enum UploadStatus {
   FAILED
 }
 
+enum AdminRole {
+  SUPER_ADMIN
+  MANAGER
+}
+
+enum AdminStatus {
+  ACTIVE
+  DISABLED
+}
+
 model AdminUser {
   id           String   @id @default(cuid())
-  email        String   @unique
+  email        String?  @unique
+  loginId      String?  @unique
+  name         String?
   passwordHash String
+  role         AdminRole   @default(MANAGER)
+  status       AdminStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
   displayName  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  claimedInvites ManagerInvite[] @relation("ClaimedManagerInvite")
+  createdGames   GameCreator[]
+}
+
+model ManagerInvite {
+  id                   String     @id @default(cuid())
+  name                 String     @unique
+  claimedByAdminUserId String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  claimedBy            AdminUser? @relation("ClaimedManagerInvite", fields: [claimedByAdminUserId], references: [id], onDelete: SetNull)
 }
 
 model Game {
   id               String        @id @default(cuid())
   slug             String        @unique
   title            String
+  year             Int?
+  developer        String?
+  difficulty       Int?
   shortDescription String
   description      String?
   thumbnailUrl     String?
@@ -45,6 +74,7 @@ model Game {
   comments         Comment[]
   ratings          Rating[]
   uploads          Upload[]
+  creators         GameCreator[]
 }
 
 model GameVersion {
@@ -74,14 +104,28 @@ model Upload {
   game         Game?        @relation(fields: [gameId], references: [id], onDelete: SetNull)
 }
 
+model GameCreator {
+  id          String    @id @default(cuid())
+  gameId      String
+  adminUserId String
+  createdAt   DateTime  @default(now())
+  game        Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, adminUserId])
+}
+
 model Comment {
-  id        String   @id @default(cuid())
-  gameId    String
-  author    String
-  body      String
-  createdAt DateTime @default(now())
-  deletedAt DateTime?
-  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  gameId       String
+  author       String
+  body         String
+  authorIp     String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
 }
 
 model Rating {

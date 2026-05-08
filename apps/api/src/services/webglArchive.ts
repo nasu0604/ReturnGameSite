@@ -16,6 +16,10 @@ interface ProcessWebglZipInput {
   title?: string;
   slug?: string;
   shortDescription?: string;
+  year?: number;
+  developer?: string;
+  difficulty?: number;
+  description?: string;
 }
 
 function normalizeEntryName(name: string) {
@@ -112,6 +116,14 @@ function listFilesRecursive(rootDir: string, currentDir = rootDir): string[] {
   return files;
 }
 
+function findThumbnail(files: string[]) {
+  const imageFiles = files.filter((file) => /\.(png|jpe?g|webp)$/i.test(file));
+  const rootImage = imageFiles.find((file) => !file.includes("/"));
+  const nonTemplateImage = imageFiles.find((file) => !file.startsWith("TemplateData/"));
+
+  return rootImage ?? nonTemplateImage ?? "";
+}
+
 function alignBuildFileNamesWithIndex(targetDir: string) {
   const indexPath = path.join(targetDir, "index.html");
   const indexHtml = fs.readFileSync(indexPath, "utf8");
@@ -189,13 +201,19 @@ export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
   }
 
   const buildFiles = alignBuildFileNamesWithIndex(targetDir);
+  const extractedFiles = listFilesRecursive(targetDir);
+  const thumbnailPath = findThumbnail(extractedFiles);
 
   return {
     id: slug,
     slug,
     title,
+    year: input.year,
+    developer: input.developer?.trim() || undefined,
+    difficulty: input.difficulty,
     shortDescription: input.shortDescription?.trim() || "Local WebGL upload",
-    thumbnailUrl: "",
+    description: input.description?.trim() || undefined,
+    thumbnailUrl: thumbnailPath ? `/local-games/${encodeURIComponent(slug)}/${thumbnailPath}` : "",
     currentVersion: "local",
     entryUrl: `/local-games/${encodeURIComponent(slug)}/index.html`,
     status: "PUBLISHED",

@@ -22,3 +22,14 @@ export function requireAdmin(request: AdminRequest, response: Response, next: Ne
     response.status(401).json({ message: "Invalid or expired admin token." });
   }
 }
+
+export function requireSuperAdmin(request: AdminRequest, response: Response, next: NextFunction) {
+  requireAdmin(request, response, () => {
+    if (request.admin?.role !== "SUPER_ADMIN") {
+      response.status(403).json({ message: "Super admin access is required." });
+      return;
+    }
+
+    next();
+  });
+}

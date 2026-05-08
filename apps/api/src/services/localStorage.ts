@@ -25,7 +25,7 @@ export function slugify(value: string) {
   const slug = value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9가-힣_-]+/g, "-")
+    .replace(/[^a-z0-9\uac00-\ud7a3-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
   return slug || `game-${Date.now()}`;

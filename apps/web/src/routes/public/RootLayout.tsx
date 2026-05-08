@@ -1,19 +1,28 @@
-import { Gamepad2, Shield } from "lucide-react";
-import { Link, Outlet } from "react-router-dom";
+import { Shield } from "lucide-react";
+import { Link, Outlet, useLocation } from "react-router-dom";
 
 export function RootLayout() {
+  const location = useLocation();
+  const isGameDetail = location.pathname.startsWith("/games/");
+  const isHome = location.pathname === "/";
+  const isAdmin = location.pathname.startsWith("/admin");
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isGameDetail ? "game-detail-shell" : ""}`}>
       <header className="site-header">
-        <Link className="brand" to="/">
-          <Gamepad2 aria-hidden="true" />
+        <Link className="brand navbar-title" to="/">
           <span>return Game;</span>
         </Link>
-        <nav className="site-nav">
-          <Link to="/">Games</Link>
-          <Link to="/admin">
+        <nav className="site-nav navbar-links">
+          <Link className={`nav-link ${isHome ? "active" : ""}`} to="/">
+            홈
+          </Link>
+          <Link className={`nav-link ${isHome ? "active" : ""}`} to="/">
+            프로젝트
+          </Link>
+          <Link className={`nav-link ${isAdmin ? "active" : ""}`} to="/admin">
             <Shield aria-hidden="true" />
-            Admin
+            관리자
           </Link>
         </nav>
       </header>

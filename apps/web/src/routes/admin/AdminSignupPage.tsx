@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiPostJson, setAdminSession, setAdminToken } from "../../api/client";
 
-export function AdminLoginPage() {
+export function AdminSignupPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState("");
 
@@ -12,43 +12,53 @@ export function AdminLoginPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    setStatus("Signing in...");
+    setStatus("가입 처리 중...");
 
     try {
-      const payload = await apiPostJson<LoginResponse>("/admin/login", {
+      const payload = await apiPostJson<LoginResponse>("/admin/signup", {
+        name: String(formData.get("name") ?? ""),
         loginId: String(formData.get("loginId") ?? ""),
-        password: String(formData.get("password") ?? "")
+        password: String(formData.get("password") ?? ""),
+        passwordConfirm: String(formData.get("passwordConfirm") ?? "")
       });
 
       setAdminToken(payload.token);
       setAdminSession(payload.admin);
       navigate("/admin/upload");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Sign in failed.");
+      setStatus(error instanceof Error ? error.message : "회원가입에 실패했습니다.");
     }
   }
 
   return (
     <section className="admin-panel narrow">
       <div className="section-heading compact">
-        <p className="eyebrow">Admin access</p>
-        <h1>관리자 로그인</h1>
+        <p className="eyebrow">Manager signup</p>
+        <h1>세부 관리자 가입</h1>
       </div>
       <form className="login-form" onSubmit={handleSubmit}>
         <label>
+          이름
+          <input name="name" required />
+        </label>
+        <label>
           아이디
-          <input type="text" name="loginId" autoComplete="username" required />
+          <input name="loginId" required />
         </label>
         <label>
           비밀번호
-          <input type="password" name="password" autoComplete="current-password" required />
+          <input type="password" name="password" minLength={6} required />
+        </label>
+        <label>
+          비밀번호 확인
+          <input type="password" name="passwordConfirm" minLength={6} required />
         </label>
         <button className="primary-action" type="submit">
-          로그인
+          가입
         </button>
       </form>
-      <Link className="auth-switch-link" to="/admin/signup">
-        세부 관리자 회원가입
+      <Link className="auth-switch-link" to="/admin">
+        로그인으로 돌아가기
       </Link>
       {status && <p className="status-text">{status}</p>}
     </section>

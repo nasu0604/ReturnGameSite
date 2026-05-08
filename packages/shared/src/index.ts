@@ -1,9 +1,14 @@
 export type GameStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type AdminRole = "SUPER_ADMIN" | "MANAGER";
+export type AdminStatus = "ACTIVE" | "DISABLED";
 
 export interface GameSummary {
   id: string;
   slug: string;
   title: string;
+  year?: number;
+  developer?: string;
+  difficulty?: number;
   shortDescription: string;
   thumbnailUrl: string;
   currentVersion: string;
@@ -20,6 +25,44 @@ export interface GameDetail extends GameSummary {
   status: GameStatus;
 }
 
+export interface GameComment {
+  id: string;
+  gameId: string;
+  author: string;
+  body: string;
+  authorIp?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface AdminGameRecord extends GameDetail {
+  createdAt: string;
+  updatedAt: string;
+  commentCount: number;
+  creators: AdminUserSummary[];
+}
+
+export interface AdminUserSummary {
+  id: string;
+  name: string;
+  loginId: string;
+  role: AdminRole;
+  status: AdminStatus;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface ManagerInviteRecord {
+  id: string;
+  name: string;
+  claimedByAdminUserId?: string;
+  claimedBy?: AdminUserSummary;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface UploadRecord {
   id: string;
   originalName: string;
@@ -28,7 +71,12 @@ export interface UploadRecord {
 }
 
 export interface AdminSession {
-  email: string;
+  id: string;
+  name: string;
+  loginId: string;
+  role: AdminRole;
+  status: AdminStatus;
+  email?: string;
   displayName: string;
 }
 
