@@ -24,6 +24,11 @@ function toComment(comment: {
   };
 }
 
+function toPublicComment(comment: Parameters<typeof toComment>[0]): GameComment {
+  const { authorIp: _authorIp, ...publicComment } = toComment(comment);
+  return publicComment;
+}
+
 export async function listCommentsByGameSlug(slug: string) {
   const comments = await prisma.comment.findMany({
     where: {
@@ -38,7 +43,7 @@ export async function listCommentsByGameSlug(slug: string) {
     }
   });
 
-  return comments.map(toComment);
+  return comments.map(toPublicComment);
 }
 
 export async function createCommentForGameSlug(input: {
@@ -70,7 +75,7 @@ export async function createCommentForGameSlug(input: {
     }
   });
 
-  return toComment(comment);
+  return toPublicComment(comment);
 }
 
 export async function listAdminCommentsByGameId(gameId: string) {

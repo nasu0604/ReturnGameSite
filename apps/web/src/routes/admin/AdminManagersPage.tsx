@@ -1,20 +1,19 @@
-import type { AdminUserSummary, ManagerInviteRecord } from "@return-game/shared";
+import type { AdminAuditLogRecord, AdminUserSummary } from "@return-game/shared";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { apiGetAdmin, apiPatchAdmin, apiPostAdmin } from "../../api/client";
+import { apiGetAdmin, apiPatchAdmin } from "../../api/client";
 
 interface ManagersResponse {
   managers: AdminUserSummary[];
 }
 
-interface InvitesResponse {
-  invites: ManagerInviteRecord[];
+interface SignupCodeResponse {
+  configured: boolean;
+  updatedAt?: string;
 }
 
-interface InviteCreateResponse {
-  invite: ManagerInviteRecord;
-  alreadyExists?: boolean;
-  message?: string;
+interface AuditLogsResponse {
+  logs: AdminAuditLogRecord[];
 }
 
 function formatDate(value?: string) {
@@ -30,16 +29,19 @@ function formatDate(value?: string) {
 
 export function AdminManagersPage() {
   const [managers, setManagers] = useState<AdminUserSummary[]>([]);
-  const [invites, setInvites] = useState<ManagerInviteRecord[]>([]);
-  const [status, setStatus] = useState("Loading managers...");
+  const [logs, setLogs] = useState<AdminAuditLogRecord[]>([]);
+  const [signupCode, setSignupCode] = useState<SignupCodeResponse>({ configured: false });
+  const [status, setStatus] = useState("관리자 정보를 불러오는 중...");
 
   async function load() {
-    const [managerPayload, invitePayload] = await Promise.all([
+    const [managerPayload, signupCodePayload, auditPayload] = await Promise.all([
       apiGetAdmin<ManagersResponse>("/admin/managers"),
-      apiGetAdmin<InvitesResponse>("/admin/manager-invites")
+      apiGetAdmin<SignupCodeResponse>("/admin/signup-code"),
+      apiGetAdmin<AuditLogsResponse>("/admin/audit-logs")
     ]);
     setManagers(managerPayload.managers);
-    setInvites(invitePayload.invites);
+    setSignupCode(signupCodePayload);
+    setLogs(auditPayload.logs);
   }
 
   useEffect(() => {
@@ -48,21 +50,28 @@ export function AdminManagersPage() {
       .catch((error) => setStatus(error instanceof Error ? error.message : "관리자 정보를 불러오지 못했습니다."));
   }, []);
 
-  async function handleInvite(event: FormEvent<HTMLFormElement>) {
+  async function handleSecurityCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    setStatus("Adding invite...");
+    const securityCode = String(formData.get("securityCode") ?? "");
+    const securityCodeConfirm = String(formData.get("securityCodeConfirm") ?? "");
+
+    if (securityCode !== securityCodeConfirm) {
+      setStatus("보안코드 확인이 일치하지 않습니다.");
+      return;
+    }
+
+    setStatus("보안코드를 저장하는 중...");
 
     try {
-      const payload = await apiPostAdmin<InviteCreateResponse>("/admin/manager-invites", {
-        name: String(formData.get("name") ?? "")
-      });
+      const payload = await apiPatchAdmin<SignupCodeResponse>("/admin/signup-code", { securityCode });
+      setSignupCode(payload);
       form.reset();
       await load();
-      setStatus(payload.alreadyExists ? payload.message ?? "이미 등록된 이름입니다." : "허용 이름을 추가했습니다.");
+      setStatus("세부 관리자 회원가입 보안코드를 저장했습니다.");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "허용 이름 추가에 실패했습니다.");
+      setStatus(error instanceof Error ? error.message : "보안코드 저장에 실패했습니다.");
     }
   }
 
@@ -77,6 +86,7 @@ export function AdminManagersPage() {
     if (!password) return;
 
     await apiPatchAdmin(`/admin/managers/${manager.id}/password`, { password });
+    await load();
     setStatus("비밀번호를 초기화했습니다.");
   }
 
@@ -89,40 +99,27 @@ export function AdminManagersPage() {
         </div>
       </div>
 
-      <form className="inline-admin-form" onSubmit={handleInvite}>
-        <label>
-          세부 관리자 허용 이름
-          <input name="name" placeholder="홍길동" required />
-        </label>
-        <button className="primary-action" type="submit">
-          추가
-        </button>
-      </form>
-      {status && <p className="status-text">{status}</p>}
-
       <section className="admin-comments-panel">
-        <h2>가입 허용 명단</h2>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>이름</th>
-                <th>가입 여부</th>
-                <th>등록일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invites.map((invite) => (
-                <tr key={invite.id}>
-                  <td>{invite.name}</td>
-                  <td>{invite.claimedBy ? `${invite.claimedBy.name}(${invite.claimedBy.loginId})` : "미가입"}</td>
-                  <td>{formatDate(invite.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <h2>세부 관리자 회원가입 보안코드</h2>
+        <p className="status-text">
+          현재 상태: {signupCode.configured ? `설정됨 (${formatDate(signupCode.updatedAt)})` : "미설정"}
+        </p>
+        <form className="inline-admin-form" onSubmit={handleSecurityCode}>
+          <label>
+            새 보안코드
+            <input name="securityCode" type="password" minLength={6} required />
+          </label>
+          <label>
+            보안코드 확인
+            <input name="securityCodeConfirm" type="password" minLength={6} required />
+          </label>
+          <button className="primary-action" type="submit">
+            저장
+          </button>
+        </form>
       </section>
+
+      {status && <p className="status-text">{status}</p>}
 
       <section className="admin-comments-panel">
         <h2>관리자 계정</h2>
@@ -158,6 +155,34 @@ export function AdminManagersPage() {
                       </div>
                     )}
                   </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="admin-comments-panel">
+        <h2>관리자 작업 로그</h2>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>시간</th>
+                <th>관리자</th>
+                <th>작업</th>
+                <th>대상</th>
+                <th>내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id}>
+                  <td>{formatDate(log.createdAt)}</td>
+                  <td>{log.admin ? `${log.admin.name}(${log.admin.loginId})` : "-"}</td>
+                  <td>{log.action}</td>
+                  <td>{log.targetType}</td>
+                  <td>{log.summary}</td>
                 </tr>
               ))}
             </tbody>

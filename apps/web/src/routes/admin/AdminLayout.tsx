@@ -2,6 +2,7 @@ import type { AdminSession } from "@return-game/shared";
 import { Database, LogOut, UploadCloud, User, Users } from "lucide-react";
 import { Link, Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { clearAdminToken, getAdminSession, getAdminToken } from "../../api/client";
+import logoLong from "../../assets/logo_long.png";
 import { AdminLoginPage } from "./AdminLoginPage";
 import { AdminSignupPage } from "./AdminSignupPage";
 
@@ -13,7 +14,7 @@ export function AdminLayout() {
   const isLoginRoute = location.pathname === "/admin/login" || location.pathname === "/admin";
 
   if (!token) {
-    return isSignupRoute ? <AdminSignupPage /> : <AdminLoginPage />;
+    return <main className="admin-auth-shell">{isSignupRoute ? <AdminSignupPage /> : <AdminLoginPage />}</main>;
   }
 
   if (isLoginRoute || isSignupRoute) {
@@ -25,9 +26,8 @@ export function AdminLayout() {
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <Link className="brand" to="/admin/upload">
-          <Database aria-hidden="true" />
-          <span>return Admin</span>
+        <Link className="admin-brand-logo" to="/" onClick={() => window.scrollTo({ top: 0, left: 0 })}>
+          <img src={logoLong} alt="return Game" />
         </Link>
         <div className="admin-profile-mini">
           <strong>{admin?.name ?? "관리자"}</strong>

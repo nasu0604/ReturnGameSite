@@ -1,7 +1,8 @@
 import type { GameComment, GameDetail } from "@return-game/shared";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { apiDeleteJson, apiGet, apiPostJson } from "../../api/client";
 
 interface GameResponse {
@@ -47,10 +48,15 @@ function formatDate(value: string) {
 
 export function GameDetailPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [game, setGame] = useState<GameDetail | null>(null);
   const [comments, setComments] = useState<GameComment[]>([]);
-  const [status, setStatus] = useState("Loading game...");
+  const [status, setStatus] = useState("게임을 불러오는 중입니다.");
   const [commentStatus, setCommentStatus] = useState("");
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [slug]);
 
   async function loadComments(currentSlug: string) {
     const payload = await apiGet<CommentsResponse>(`/games/${currentSlug}/comments`);
@@ -60,7 +66,7 @@ export function GameDetailPage() {
   useEffect(() => {
     if (!slug) return;
 
-    setStatus("Loading game...");
+    setStatus("게임을 불러오는 중입니다.");
     apiGet<GameResponse>(`/games/${slug}`)
       .then(async (payload) => {
         setGame(payload.game);
@@ -68,9 +74,18 @@ export function GameDetailPage() {
         await loadComments(slug);
       })
       .catch((error) => {
-        setStatus(error instanceof Error ? error.message : "Failed to load game.");
+        setStatus(error instanceof Error ? error.message : "게임을 불러오지 못했습니다.");
       });
   }, [slug]);
+
+  function handleBack() {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/");
+  }
 
   async function handleCommentSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -157,6 +172,13 @@ export function GameDetailPage() {
               </div>
             </div>
           </div>
+
+          <div className="game-back-button-row">
+            <button className="game-back-button" type="button" onClick={handleBack} aria-label="이전 화면으로 이동">
+              <ArrowLeft aria-hidden="true" />
+              <span>뒤로</span>
+            </button>
+          </div>
         </div>
 
         <div className="ratings-comments-wrapper">
@@ -174,12 +196,7 @@ export function GameDetailPage() {
                     required
                   />
                 </div>
-                <textarea
-                  className="comment-input"
-                  name="body"
-                  placeholder="댓글을 입력해주세요 (Enter로 등록)"
-                  required
-                />
+                <textarea className="comment-input" name="body" placeholder="댓글을 입력해주세요 (Enter로 등록)" required />
                 <button className="comment-submit-btn" type="submit">
                   등록
                 </button>

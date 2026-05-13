@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import AdmZip from "adm-zip";
 import type { GameDetail } from "@return-game/shared";
 import { slugify, storagePaths } from "./localStorage.js";
@@ -22,8 +23,45 @@ interface ProcessWebglZipInput {
   description?: string;
 }
 
+const unityTemplateStyle = `body { padding: 0; margin: 0; }
+#unity-container { position: absolute; }
+#unity-container.unity-desktop { left: 50%; top: 50%; transform: translate(-50%, -50%) }
+#unity-container.unity-mobile { position: fixed; width: 100%; height: 100% }
+#unity-canvas { background: #231F20; border-radius: 10px; }
+.unity-mobile #unity-canvas { width: 100%; height: 100% }
+#unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none }
+#unity-logo { width: 154px; height: 130px; background: url('unity-logo-dark.png') no-repeat center }
+#unity-progress-bar-empty { width: 141px; height: 18px; margin-top: 10px; margin-left: 6.5px; background: url('progress-bar-empty-dark.png') no-repeat center }
+#unity-progress-bar-full { width: 0%; height: 18px; margin-top: 10px; background: url('progress-bar-full-dark.png') no-repeat center }
+#unity-footer { position: relative; margin-top:5px; }
+.unity-mobile #unity-footer { display: none }
+#unity-logo-title-footer { float:left; width: 102px; height: 38px; background: url('unity-logo-title-footer.png') no-repeat center }
+#unity-build-title { float: right; margin-right: 10px; line-height: 38px; font-size: 18px; color:white; }
+#unity-fullscreen-button { cursor:pointer; float: right; width: 38px; height: 38px; background: url('fullscreen-button.png') no-repeat center }
+#unity-warning { position: absolute; left: 50%; top: 5%; transform: translate(-50%); background: white; padding: 10px; display: none }
+`;
+
 function normalizeEntryName(name: string) {
   return name.replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function getApiRoot() {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+}
+
+function getTemplateAssetPath(fileName: string) {
+  const candidates = [
+    path.join(getApiRoot(), "assets", "template-data", fileName),
+    path.join(process.cwd(), "assets", "template-data", fileName),
+    path.join(process.cwd(), "apps", "api", "assets", "template-data", fileName)
+  ];
+
+  const assetPath = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!assetPath) {
+    throw new Error(`Missing Unity template asset: ${fileName}`);
+  }
+
+  return assetPath;
 }
 
 function getWebglRoot(entries: string[]) {
@@ -32,8 +70,8 @@ function getWebglRoot(entries: string[]) {
 
   for (const indexEntry of indexEntries) {
     const root = path.posix.dirname(indexEntry) === "." ? "" : path.posix.dirname(indexEntry);
-    const buildPrefix = root ? `${root}/Build/` : "Build/";
-    const hasBuildFolder = fileEntries.some((entry) => entry.startsWith(buildPrefix));
+    const buildPrefix = root ? `${root}/build/` : "build/";
+    const hasBuildFolder = fileEntries.some((entry) => entry.toLowerCase().startsWith(buildPrefix.toLowerCase()));
 
     if (hasBuildFolder) {
       return root;
@@ -47,6 +85,34 @@ function relativeToRoot(entry: string, root: string) {
   if (!root) return entry;
   if (entry === root) return "";
   return entry.startsWith(`${root}/`) ? entry.slice(root.length + 1) : null;
+}
+
+function normalizeUnityRelativePath(relativePath: string) {
+  const segments = relativePath.split("/");
+  if (segments[0]?.toLowerCase() === "build") {
+    segments[0] = "Build";
+  }
+
+  return segments.join("/");
+}
+
+function isUnityBuildAsset(fileName: string) {
+  return /\.(data|wasm|loader\.js|framework\.js|symbols\.json)(?:\.(?:br|gz))?$/i.test(fileName);
+}
+
+function shouldExtractUnityFile(relativePath: string) {
+  const normalizedPath = normalizeUnityRelativePath(relativePath);
+
+  if (normalizedPath === "index.html") return true;
+  if (normalizedPath.startsWith("TemplateData/")) return true;
+  if (normalizedPath.startsWith("StreamingAssets/")) return true;
+
+  if (normalizedPath.startsWith("Build/")) {
+    const buildRelativePath = normalizedPath.slice("Build/".length);
+    return !buildRelativePath.includes("/") && isUnityBuildAsset(buildRelativePath);
+  }
+
+  return false;
 }
 
 function collectBuildFiles(entries: string[]) {
@@ -83,7 +149,7 @@ function validateBuild(entries: string[]) {
 }
 
 function getReferencedBuildFiles(indexHtml: string) {
-  const directMatches = [...indexHtml.matchAll(/Build\/([^"']+\.(?:data|wasm|framework\.js|loader\.js))/g)].map(
+  const directMatches = [...indexHtml.matchAll(/Build\/([^"']+\.(?:data|wasm|framework\.js|loader\.js))/gi)].map(
     (match) => `Build/${match[1]}`
   );
   const buildUrlMatches = [...indexHtml.matchAll(/buildUrl\s*\+\s*["']\/([^"']+\.(?:data|wasm|framework\.js|loader\.js))/g)].map(
@@ -91,6 +157,19 @@ function getReferencedBuildFiles(indexHtml: string) {
   );
 
   return [...new Set([...directMatches, ...buildUrlMatches])];
+}
+
+function normalizeIndexBuildReferences(targetDir: string) {
+  const indexPath = path.join(targetDir, "index.html");
+  const indexHtml = fs.readFileSync(indexPath, "utf8");
+  const normalizedHtml = indexHtml
+    .replace(/(buildUrl\s*=\s*["'])build(["'])/gi, "$1Build$2")
+    .replace(/(["'])build\//gi, "$1Build/")
+    .replace(/(<div\b[^>]*\bid=["']unity-build-title["'][^>]*>)[\s\S]*?(<\/div>)/i, "$1$2");
+
+  if (normalizedHtml !== indexHtml) {
+    fs.writeFileSync(indexPath, normalizedHtml, "utf8");
+  }
 }
 
 function getExtensionKey(fileName: string) {
@@ -159,6 +238,15 @@ function assertSafeRelativePath(relativePath: string) {
   return normalized;
 }
 
+export function normalizeUnityTemplateData(targetDir: string) {
+  const templateDir = path.join(targetDir, "TemplateData");
+
+  fs.mkdirSync(templateDir, { recursive: true });
+  fs.writeFileSync(path.join(templateDir, "style.css"), unityTemplateStyle, "utf8");
+  fs.copyFileSync(getTemplateAssetPath("fullscreen-button.png"), path.join(templateDir, "fullscreen-button.png"));
+  fs.rmSync(path.join(templateDir, "unity-logo-title-footer.png"), { force: true });
+}
+
 export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
   const zip = new AdmZip(input.zipPath);
   const zipEntries = zip.getEntries();
@@ -172,7 +260,7 @@ export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
   const relativeEntries = normalizedNames
     .map((entry) => relativeToRoot(entry, root))
     .filter((entry): entry is string => Boolean(entry));
-  validateBuild(relativeEntries);
+  validateBuild(relativeEntries.map(normalizeUnityRelativePath));
   const title = input.title?.trim() || path.basename(input.originalName, path.extname(input.originalName));
   const slug = slugify(input.slug || title);
   const targetDir = path.join(storagePaths.gamesDir, slug);
@@ -186,8 +274,9 @@ export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
     const normalizedName = normalizeEntryName(entry.entryName);
     const relative = relativeToRoot(normalizedName, root);
     if (!relative) continue;
+    if (!shouldExtractUnityFile(relative)) continue;
 
-    const safeRelative = assertSafeRelativePath(relative);
+    const safeRelative = assertSafeRelativePath(normalizeUnityRelativePath(relative));
     const targetPath = path.join(targetDir, safeRelative);
     const resolvedTarget = path.resolve(targetPath);
     const resolvedRoot = path.resolve(targetDir);
@@ -200,6 +289,8 @@ export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
     fs.writeFileSync(targetPath, entry.getData());
   }
 
+  normalizeUnityTemplateData(targetDir);
+  normalizeIndexBuildReferences(targetDir);
   const buildFiles = alignBuildFileNamesWithIndex(targetDir);
   const extractedFiles = listFilesRecursive(targetDir);
   const thumbnailPath = findThumbnail(extractedFiles);
@@ -216,6 +307,8 @@ export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
     thumbnailUrl: thumbnailPath ? `/local-games/${encodeURIComponent(slug)}/${thumbnailPath}` : "",
     currentVersion: "local",
     entryUrl: `/local-games/${encodeURIComponent(slug)}/index.html`,
+    viewCount: 0,
+    commentCount: 0,
     status: "PUBLISHED",
     buildFiles
   };

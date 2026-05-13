@@ -9,15 +9,16 @@ export function AdminMePage() {
 
   async function handlePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    setStatus("Saving...");
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    setStatus("저장하는 중...");
 
     try {
       await apiPatchAdmin("/admin/me/password", {
         currentPassword: String(formData.get("currentPassword") ?? ""),
         newPassword: String(formData.get("newPassword") ?? "")
       });
-      event.currentTarget.reset();
+      form.reset();
       setStatus("비밀번호를 변경했습니다.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "비밀번호 변경에 실패했습니다.");

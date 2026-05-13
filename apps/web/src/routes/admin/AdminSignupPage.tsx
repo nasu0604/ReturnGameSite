@@ -12,12 +12,13 @@ export function AdminSignupPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    setStatus("가입 처리 중...");
+    setStatus("회원가입 처리 중...");
 
     try {
       const payload = await apiPostJson<LoginResponse>("/admin/signup", {
         name: String(formData.get("name") ?? ""),
         loginId: String(formData.get("loginId") ?? ""),
+        securityCode: String(formData.get("securityCode") ?? ""),
         password: String(formData.get("password") ?? ""),
         passwordConfirm: String(formData.get("passwordConfirm") ?? "")
       });
@@ -34,7 +35,7 @@ export function AdminSignupPage() {
     <section className="admin-panel narrow">
       <div className="section-heading compact">
         <p className="eyebrow">Manager signup</p>
-        <h1>세부 관리자 가입</h1>
+        <h1>세부 관리자 회원가입</h1>
       </div>
       <form className="login-form" onSubmit={handleSubmit}>
         <label>
@@ -44,6 +45,10 @@ export function AdminSignupPage() {
         <label>
           아이디
           <input name="loginId" required />
+        </label>
+        <label>
+          보안코드
+          <input type="password" name="securityCode" required />
         </label>
         <label>
           비밀번호

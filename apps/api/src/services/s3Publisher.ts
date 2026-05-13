@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { createS3Client, getStorageConfig } from "./storage.js";
 
@@ -7,6 +8,15 @@ interface PublishedWebglBuild {
   assetBaseUrl: string;
   entryUrl: string;
   s3Prefix: string;
+}
+
+export interface WebglPublishProgress {
+  totalFiles: number;
+  uploadedFiles: number;
+  totalBytes: number;
+  uploadedBytes: number;
+  percent: number;
+  currentFile?: string;
 }
 
 function listFilesRecursive(rootDir: string, currentDir = rootDir): string[] {
@@ -58,10 +68,43 @@ function getPublicBaseUrl(bucket: string, region: string, cdnBaseUrl: string) {
   return `https://${bucket}.s3.${region}.amazonaws.com`;
 }
 
+export async function publishGameThumbnail(input: {
+  body: Buffer;
+  slug: string;
+  contentType: string;
+}): Promise<string> {
+  const { bucket, cdnBaseUrl, uploadPrefix } = getStorageConfig();
+  const region = process.env.AWS_REGION ?? "ap-northeast-2";
+
+  if (!bucket) {
+    throw new Error("S3_BUCKET must be configured before uploading thumbnails.");
+  }
+
+  const extension = input.contentType === "image/png" ? "png" : "jpg";
+  const cleanPrefix = uploadPrefix.replace(/^\/+|\/+$/g, "");
+  const key = [cleanPrefix, input.slug, "thumbnail", `thumbnail-${Date.now()}.${extension}`]
+    .filter(Boolean)
+    .join("/");
+  const client = createS3Client();
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: input.body,
+      ContentType: input.contentType,
+      CacheControl: "public, max-age=31536000, immutable"
+    })
+  );
+
+  return joinUrl(getPublicBaseUrl(bucket, region, cdnBaseUrl), key);
+}
+
 export async function publishWebglDirectory(input: {
   directory: string;
   slug: string;
   versionLabel: string;
+  onProgress?: (progress: WebglPublishProgress) => void | Promise<void>;
 }): Promise<PublishedWebglBuild> {
   const { bucket, cdnBaseUrl, uploadPrefix } = getStorageConfig();
   const region = process.env.AWS_REGION ?? "ap-northeast-2";
@@ -74,11 +117,33 @@ export async function publishWebglDirectory(input: {
   const cleanPrefix = uploadPrefix.replace(/^\/+|\/+$/g, "");
   const s3Prefix = [cleanPrefix, input.slug, input.versionLabel].filter(Boolean).join("/");
   const files = listFilesRecursive(input.directory);
+  const fileStats = files.map((file) => ({
+    file,
+    size: fs.statSync(path.join(input.directory, file)).size
+  }));
+  const totalBytes = fileStats.reduce((sum, file) => sum + file.size, 0);
+  let uploadedFiles = 0;
+  let completedBytes = 0;
 
-  for (const file of files) {
+  async function reportProgress(currentFile?: string, currentFileUploadedBytes = 0) {
+    const uploadedBytes = Math.min(totalBytes, completedBytes + currentFileUploadedBytes);
+    const percent = totalBytes > 0 ? Math.floor((uploadedBytes / totalBytes) * 100) : 100;
+
+    await input.onProgress?.({
+      totalFiles: files.length,
+      uploadedFiles,
+      totalBytes,
+      uploadedBytes,
+      percent,
+      currentFile
+    });
+  }
+
+  await reportProgress();
+
+  for (const { file, size } of fileStats) {
     const key = `${s3Prefix}/${file}`;
     const fullPath = path.join(input.directory, file);
-    const size = fs.statSync(fullPath).size;
 
     console.log(`[s3] uploading ${key} (${size} bytes)`);
 
@@ -96,7 +161,14 @@ export async function publishWebglDirectory(input: {
       }
     });
 
+    upload.on("httpUploadProgress", (progress) => {
+      void reportProgress(file, progress.loaded ?? 0);
+    });
+
     await upload.done();
+    uploadedFiles += 1;
+    completedBytes += size;
+    await reportProgress(file, size);
     console.log(`[s3] uploaded ${key}`);
   }
 

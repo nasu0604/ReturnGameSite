@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Request } from "express";
 import type { GameDetail } from "@return-game/shared";
-import { getPublishedGameBySlug, listPublishedGames } from "../services/gameRepository.js";
+import { getPublishedGameBySlug, incrementPublishedGameView, listPublishedGames } from "../services/gameRepository.js";
 import { createCommentForGameSlug, deleteComment, listCommentsByGameSlug } from "../services/commentRepository.js";
 
 export const gamesRouter = Router();
@@ -46,6 +46,21 @@ gamesRouter.get("/:slug", async (request, response, next) => {
     }
 
     response.json({ game: withAbsoluteEntryUrl(request, game) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+gamesRouter.post("/:slug/views", async (request, response, next) => {
+  try {
+    const game = await incrementPublishedGameView(request.params.slug);
+
+    if (!game) {
+      response.status(404).json({ message: "Game not found" });
+      return;
+    }
+
+    response.json({ viewCount: game.viewCount });
   } catch (error) {
     next(error);
   }

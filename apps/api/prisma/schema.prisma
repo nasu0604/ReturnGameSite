@@ -45,6 +45,7 @@ model AdminUser {
   updatedAt    DateTime @updatedAt
   claimedInvites ManagerInvite[] @relation("ClaimedManagerInvite")
   createdGames   GameCreator[]
+  auditLogs      AdminAuditLog[]
 }
 
 model ManagerInvite {
@@ -54,6 +55,14 @@ model ManagerInvite {
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
   claimedBy            AdminUser? @relation("ClaimedManagerInvite", fields: [claimedByAdminUserId], references: [id], onDelete: SetNull)
+}
+
+model AdminSignupCode {
+  id        String   @id @default(cuid())
+  codeKey   String   @unique @default("MANAGER_SIGNUP")
+  codeHash  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Game {
@@ -66,13 +75,13 @@ model Game {
   shortDescription String
   description      String?
   thumbnailUrl     String?
+  viewCount        Int           @default(0)
   status           GameStatus    @default(DRAFT)
   currentVersionId String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   versions         GameVersion[]
   comments         Comment[]
-  ratings          Rating[]
   uploads          Upload[]
   creators         GameCreator[]
 }
@@ -99,6 +108,7 @@ model Upload {
   sourceKey    String?
   resultPrefix String?
   errorMessage String?
+  progress     Json?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   game         Game?        @relation(fields: [gameId], references: [id], onDelete: SetNull)
@@ -115,6 +125,21 @@ model GameCreator {
   @@unique([gameId, adminUserId])
 }
 
+model AdminAuditLog {
+  id          String    @id @default(cuid())
+  adminUserId String?
+  action      String
+  targetType  String
+  targetId    String?
+  summary     String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([adminUserId])
+}
+
 model Comment {
   id           String   @id @default(cuid())
   gameId       String
@@ -126,16 +151,4 @@ model Comment {
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
   game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-}
-
-model Rating {
-  id        String   @id @default(cuid())
-  gameId    String
-  userKey   String
-  score     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
-  @@unique([gameId, userKey])
 }

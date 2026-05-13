@@ -11,8 +11,11 @@ export interface GameSummary {
   difficulty?: number;
   shortDescription: string;
   thumbnailUrl: string;
+  creatorNames?: string[];
   currentVersion: string;
   entryUrl?: string;
+  viewCount: number;
+  commentCount: number;
 }
 
 export interface GameDetail extends GameSummary {
@@ -43,6 +46,16 @@ export interface AdminGameRecord extends GameDetail {
   creators: AdminUserSummary[];
 }
 
+export interface AdminAuditLogRecord {
+  id: string;
+  action: string;
+  targetType: string;
+  targetId?: string;
+  summary: string;
+  admin?: AdminUserSummary;
+  createdAt: string;
+}
+
 export interface AdminUserSummary {
   id: string;
   name: string;
@@ -68,6 +81,16 @@ export interface UploadRecord {
   originalName: string;
   status: "RECEIVED" | "VALIDATING" | "PROCESSING" | "COMPLETED" | "FAILED";
   errorMessage?: string;
+  progress?: UploadProgress;
+}
+
+export interface UploadProgress {
+  totalFiles: number;
+  uploadedFiles: number;
+  totalBytes: number;
+  uploadedBytes: number;
+  percent: number;
+  currentFile?: string;
 }
 
 export interface AdminSession {

@@ -25,7 +25,7 @@ function renderDifficulty(value?: number) {
 
 export function AdminGameListPage() {
   const [games, setGames] = useState<AdminGameRecord[]>([]);
-  const [status, setStatus] = useState("Loading games...");
+  const [status, setStatus] = useState("게임 목록을 불러오는 중...");
 
   useEffect(() => {
     apiGetAdmin<AdminGamesResponse>("/admin/games")
@@ -61,6 +61,7 @@ export function AdminGameListPage() {
               <th>제작자</th>
               <th>난이도</th>
               <th>상태</th>
+              <th>조회</th>
               <th>댓글</th>
               <th>최근 수정</th>
               <th />
@@ -77,6 +78,7 @@ export function AdminGameListPage() {
                 <td>
                   <span className={`status-pill ${game.status.toLowerCase()}`}>{game.status}</span>
                 </td>
+                <td>{game.viewCount}</td>
                 <td>{game.commentCount}</td>
                 <td>{formatDate(game.updatedAt)}</td>
                 <td>

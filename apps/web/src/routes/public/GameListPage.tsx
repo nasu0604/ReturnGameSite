@@ -1,48 +1,176 @@
 import type { GameSummary } from "@return-game/shared";
-import { ArrowRight, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Eye, MessageSquare, Play } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet } from "../../api/client";
+import { apiGet, apiPostJson } from "../../api/client";
 
 interface GamesResponse {
   games: GameSummary[];
 }
 
+interface ViewResponse {
+  viewCount: number;
+}
+
+const TITLE_TEXT = "return Game;";
+
 export function GameListPage() {
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const logoMotionRef = useRef({
+    currentSkewX: 0,
+    currentSkewY: 0,
+    currentStretchX: 1,
+    currentStretchY: 1,
+    currentTilt: 0,
+    currentX: 0,
+    currentY: 0,
+    targetSkewX: 0,
+    targetSkewY: 0,
+    targetStretchX: 1,
+    targetStretchY: 1,
+    targetTilt: 0,
+    targetX: 0,
+    targetY: 0
+  });
   const [games, setGames] = useState<GameSummary[]>([]);
-  const [status, setStatus] = useState("Loading games...");
+  const [status, setStatus] = useState("게임 목록을 불러오는 중입니다.");
   const [sortOption, setSortOption] = useState("default");
 
   useEffect(() => {
     apiGet<GamesResponse>("/games")
       .then((payload) => {
         setGames(payload.games);
-        setStatus(payload.games.length === 0 ? "No games uploaded yet." : "");
+        setStatus(payload.games.length === 0 ? "아직 업로드된 게임이 없습니다." : "");
       })
       .catch((error) => {
-        setStatus(error instanceof Error ? error.message : "Failed to load games.");
+        setStatus(error instanceof Error ? error.message : "게임 목록을 불러오지 못했습니다.");
       });
   }, []);
 
+  useEffect(() => {
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) return;
+
+    let frameId = 0;
+    const motion = logoMotionRef.current;
+
+    function animateLogo() {
+      const target = heroRef.current;
+
+      motion.currentX += (motion.targetX - motion.currentX) * 0.09;
+      motion.currentY += (motion.targetY - motion.currentY) * 0.09;
+      motion.currentStretchX += (motion.targetStretchX - motion.currentStretchX) * 0.08;
+      motion.currentStretchY += (motion.targetStretchY - motion.currentStretchY) * 0.08;
+      motion.currentTilt += (motion.targetTilt - motion.currentTilt) * 0.08;
+      motion.currentSkewX += (motion.targetSkewX - motion.currentSkewX) * 0.075;
+      motion.currentSkewY += (motion.targetSkewY - motion.currentSkewY) * 0.075;
+
+      if (target) {
+        target.style.setProperty("--logo-x", motion.currentX.toFixed(3));
+        target.style.setProperty("--logo-y", motion.currentY.toFixed(3));
+        target.style.setProperty("--logo-stretch-x", motion.currentStretchX.toFixed(4));
+        target.style.setProperty("--logo-stretch-y", motion.currentStretchY.toFixed(4));
+        target.style.setProperty("--logo-tilt", motion.currentTilt.toFixed(4));
+        target.style.setProperty("--logo-skew-x", motion.currentSkewX.toFixed(4));
+        target.style.setProperty("--logo-skew-y", motion.currentSkewY.toFixed(4));
+      }
+
+      frameId = window.requestAnimationFrame(animateLogo);
+    }
+
+    frameId = window.requestAnimationFrame(animateLogo);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) return;
+
+    const motion = logoMotionRef.current;
+
+    function updateFromPointer(event: PointerEvent) {
+      if (event.pointerType !== "mouse") return;
+
+      const width = Math.max(1, window.innerWidth);
+      const height = Math.max(1, window.innerHeight);
+      const xRatio = event.clientX / width - 0.5;
+      const yRatio = event.clientY / height - 0.5;
+
+      motion.targetX = Math.max(-7, Math.min(7, xRatio * 12));
+      motion.targetY = Math.max(-4.5, Math.min(4.5, yRatio * 8));
+      motion.targetStretchX = 1 + Math.abs(xRatio) * 0.06 - Math.abs(yRatio) * 0.014;
+      motion.targetStretchY = 1 + Math.abs(yRatio) * 0.045 - Math.abs(xRatio) * 0.01;
+      motion.targetTilt = Math.max(-0.65, Math.min(0.65, xRatio * 1.25));
+      motion.targetSkewX = Math.max(-1.65, Math.min(1.65, xRatio * 3.1));
+      motion.targetSkewY = Math.max(-0.75, Math.min(0.75, yRatio * 1.45));
+    }
+
+    function resetPointerMotion() {
+      motion.targetX = 0;
+      motion.targetY = 0;
+      motion.targetStretchX = 1;
+      motion.targetStretchY = 1;
+      motion.targetTilt = 0;
+      motion.targetSkewX = 0;
+      motion.targetSkewY = 0;
+    }
+
+    window.addEventListener("pointermove", updateFromPointer);
+    window.addEventListener("pointerleave", resetPointerMotion);
+    window.addEventListener("blur", resetPointerMotion);
+
+    return () => {
+      window.removeEventListener("pointermove", updateFromPointer);
+      window.removeEventListener("pointerleave", resetPointerMotion);
+      window.removeEventListener("blur", resetPointerMotion);
+    };
+  }, []);
+
+  async function handleGameOpen(slug: string) {
+    try {
+      const payload = await apiPostJson<ViewResponse>(`/games/${slug}/views`, {});
+      setGames((currentGames) =>
+        currentGames.map((game) => (game.slug === slug ? { ...game, viewCount: payload.viewCount } : game))
+      );
+    } catch {
+      // 조회수 기록 실패가 게임 진입을 막으면 안 된다.
+    }
+  }
+
   const visibleGames = [...games].sort((a, b) => {
     if (sortOption === "name") return a.title.localeCompare(b.title);
+    if (sortOption === "views") return b.viewCount - a.viewCount;
+    if (sortOption === "comments") return b.commentCount - a.commentCount;
     return 0;
   });
 
   return (
     <section className="page-container home-page project-page">
-      <div className="home-hero">
-        <p className="home-tagline">2025학년도 제44회 경황제</p>
+      <div className="home-hero" ref={heroRef}>
         <h1 className="home-title">
-          <span className="home-title-typing">@return Game;</span>
+          <span className="home-title-typing" aria-label={TITLE_TEXT}>
+            {TITLE_TEXT}
+          </span>
         </h1>
         <p className="home-subtitle">경희고등학교 게임 개발 동아리</p>
-      </div>
-
-      <div className="home-links">
-        <a className="home-link-box" href="#games">
-          <ArrowRight className="cta-arrow-icon" aria-hidden="true" />
-          게임 체험하러 가기
+        <a className="scroll-cue" href="#games" aria-label="게임 목록으로 이동">
+          <span className="scroll-cue-label">아래로 스크롤</span>
+          <span className="scroll-arrows" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
         </a>
       </div>
 
@@ -51,10 +179,12 @@ export function GameListPage() {
           className="sort-dropdown"
           value={sortOption}
           onChange={(event) => setSortOption(event.target.value)}
-          aria-label="sort games"
+          aria-label="게임 정렬"
         >
           <option value="default">기본순</option>
           <option value="name">이름순</option>
+          <option value="views">조회순</option>
+          <option value="comments">댓글순</option>
         </select>
       </div>
 
@@ -62,21 +192,26 @@ export function GameListPage() {
       <ul className="project-grid">
         {visibleGames.map((game) => (
           <li key={game.id}>
-            <Link className="project-item" to={`/games/${game.slug}`}>
+            <Link className="project-item" to={`/games/${game.slug}`} onClick={() => void handleGameOpen(game.slug)}>
               <div className="project-image-container">
                 {game.thumbnailUrl ? <img src={game.thumbnailUrl} alt="" /> : <Play aria-hidden="true" />}
               </div>
               <div className="project-text-container">
-                <div className="project-text-row">
-                  <div className="project-title">{game.title}</div>
-                  <div className="project-rating">
-                    <span className="project-eye">visibility</span>
-                    0
+                <div className="project-text-main">
+                  <div>
+                    <div className="project-title">{game.title}</div>
+                    <div className="project-subtitle">{game.shortDescription}</div>
                   </div>
-                </div>
-                <div className="project-text-row">
-                  <div className="project-subtitle">{game.shortDescription}</div>
-                  <div className="project-comments-info">0</div>
+                  <div className="project-stats">
+                    <span>
+                      <Eye aria-hidden="true" />
+                      {game.viewCount}
+                    </span>
+                    <span>
+                      <MessageSquare aria-hidden="true" />
+                      {game.commentCount}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>

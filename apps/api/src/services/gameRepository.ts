@@ -19,6 +19,9 @@ type GameWithVersions = NonNullable<Awaited<ReturnType<typeof prisma.game.findFi
     manifest: unknown;
     createdAt: Date;
   }>;
+  _count?: {
+    comments: number;
+  };
 };
 
 function currentVersion(game: GameWithVersions) {
@@ -32,18 +35,35 @@ function buildFilesFromManifest(manifest: unknown): GameDetail["buildFiles"] {
 
 function toSummary(game: GameWithVersions): GameSummary {
   const version = currentVersion(game);
+  const publicCreators = (
+    game as GameWithVersions & {
+      creators?: Array<{
+        adminUser: {
+          name: string | null;
+          loginId: string | null;
+        };
+      }>;
+    }
+  ).creators;
+  const creatorNames =
+    publicCreators
+      ?.map((creator) => creator.adminUser.name ?? creator.adminUser.loginId ?? "")
+      .filter(Boolean) ?? [];
 
   return {
     id: game.id,
     slug: game.slug,
     title: game.title,
     year: game.year ?? undefined,
-    developer: game.developer ?? undefined,
+    developer: creatorNames.length > 0 ? creatorNames.join(", ") : game.developer ?? undefined,
     difficulty: game.difficulty ?? undefined,
     shortDescription: game.shortDescription,
     thumbnailUrl: game.thumbnailUrl ?? "",
+    creatorNames,
     currentVersion: version?.versionLabel ?? "",
-    entryUrl: version?.entryUrl
+    entryUrl: version?.entryUrl,
+    viewCount: game.viewCount ?? 0,
+    commentCount: game._count?.comments ?? 0
   };
 }
 
@@ -94,8 +114,39 @@ function toAdminRecord(
     ...toDetail(game),
     createdAt: game.createdAt.toISOString(),
     updatedAt: game.updatedAt.toISOString(),
-    commentCount: game._count?.comments ?? 0,
     creators: game.creators?.map((creator) => adminUserSummary(creator.adminUser)) ?? []
+  };
+}
+
+function publicGameInclude() {
+  return {
+    versions: {
+      orderBy: {
+        createdAt: "desc" as const
+      }
+    },
+    _count: {
+      select: {
+        comments: {
+          where: {
+            deletedAt: null
+          }
+        }
+      }
+    },
+    creators: {
+      include: {
+        adminUser: {
+          select: {
+            name: true,
+            loginId: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "asc" as const
+      }
+    }
   };
 }
 
@@ -139,13 +190,7 @@ export async function listPublishedGames() {
     where: {
       status: "PUBLISHED"
     },
-    include: {
-      versions: {
-        orderBy: {
-          createdAt: "desc"
-        }
-      }
-    },
+    include: publicGameInclude(),
     orderBy: {
       updatedAt: "desc"
     }
@@ -160,13 +205,7 @@ export async function getPublishedGameBySlug(slug: string) {
       slug,
       status: "PUBLISHED"
     },
-    include: {
-      versions: {
-        orderBy: {
-          createdAt: "desc"
-        }
-      }
-    }
+    include: publicGameInclude()
   });
 
   return game ? toDetail(game) : null;
@@ -178,16 +217,38 @@ export async function getPublishedGameById(id: string) {
       id,
       status: "PUBLISHED"
     },
-    include: {
-      versions: {
-        orderBy: {
-          createdAt: "desc"
-        }
-      }
-    }
+    include: publicGameInclude()
   });
 
   return game ? toDetail(game) : null;
+}
+
+export async function incrementPublishedGameView(slug: string) {
+  const game = await prisma.game.findFirst({
+    where: {
+      slug,
+      status: "PUBLISHED"
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (!game) return null;
+
+  const updated = await prisma.game.update({
+    where: {
+      id: game.id
+    },
+    data: {
+      viewCount: {
+        increment: 1
+      }
+    },
+    include: publicGameInclude()
+  });
+
+  return toDetail(updated);
 }
 
 export async function upsertPublishedGame(input: {
@@ -273,6 +334,42 @@ export async function upsertPublishedGame(input: {
   return toDetail(updatedGame);
 }
 
+export async function addGameVersionToExistingGame(
+  id: string,
+  input: {
+    versionLabel: string;
+    entryUrl: string;
+    assetBaseUrl: string;
+    s3Prefix: string;
+    manifest: Prisma.InputJsonValue;
+  }
+) {
+  const game = await prisma.$transaction(async (tx) => {
+    const version = await tx.gameVersion.create({
+      data: {
+        gameId: id,
+        versionLabel: input.versionLabel,
+        entryUrl: input.entryUrl,
+        assetBaseUrl: input.assetBaseUrl,
+        s3Prefix: input.s3Prefix,
+        manifest: input.manifest
+      }
+    });
+
+    return tx.game.update({
+      where: {
+        id
+      },
+      data: {
+        currentVersionId: version.id
+      },
+      include: adminGameInclude()
+    });
+  });
+
+  return toAdminRecord(game);
+}
+
 export async function listAdminGames(admin: AdminSession) {
   const games = await prisma.game.findMany({
     where: adminGameWhere(admin),
@@ -349,6 +446,20 @@ export async function updateAdminGame(
       },
       include: adminGameInclude()
     });
+  });
+
+  return toAdminRecord(game);
+}
+
+export async function updateAdminGameThumbnail(id: string, thumbnailUrl: string) {
+  const game = await prisma.game.update({
+    where: {
+      id
+    },
+    data: {
+      thumbnailUrl
+    },
+    include: adminGameInclude()
   });
 
   return toAdminRecord(game);

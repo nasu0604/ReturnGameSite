@@ -124,6 +124,26 @@ export async function apiPatchAdmin<T>(path: string, body: unknown): Promise<T> 
   return response.json() as Promise<T>;
 }
 
+export async function apiPatchForm<T>(path: string, formData: FormData): Promise<T> {
+  const token = getAdminToken();
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "PATCH",
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`
+        }
+      : undefined,
+    body: formData
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(payload?.message ?? `API request failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
 export async function apiDeleteAdmin(path: string): Promise<void> {
   const token = getAdminToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {

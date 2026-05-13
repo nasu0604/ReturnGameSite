@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
 import { Router } from "express";
-import type { LoginResponse, ManagerInviteRecord } from "@return-game/shared";
+import type { LoginResponse } from "@return-game/shared";
 import { requireAdmin, requireSuperAdmin, type AdminRequest } from "../middleware/requireAdmin.js";
 import { createAdminToken, ensureConfiguredSuperAdmin, toAdminSession } from "../services/auth.js";
 import { prisma } from "../services/db.js";
+import { listAdminAuditLogs, recordAdminAuditLog } from "../services/adminAuditLog.js";
 import {
   adminUserSummary,
   archiveAdminGame,
@@ -48,24 +49,6 @@ function statusField(value: unknown) {
   }
 
   return status;
-}
-
-function inviteRecord(invite: {
-  id: string;
-  name: string;
-  claimedByAdminUserId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  claimedBy?: Parameters<typeof adminUserSummary>[0] | null;
-}): ManagerInviteRecord {
-  return {
-    id: invite.id,
-    name: invite.name,
-    claimedByAdminUserId: invite.claimedByAdminUserId ?? undefined,
-    claimedBy: invite.claimedBy ? adminUserSummary(invite.claimedBy) : undefined,
-    createdAt: invite.createdAt.toISOString(),
-    updatedAt: invite.updatedAt.toISOString()
-  };
 }
 
 adminRouter.post("/login", async (request, response, next) => {
@@ -116,11 +99,12 @@ adminRouter.post("/signup", async (request, response, next) => {
   try {
     const name = nameField(request.body.name);
     const loginId = stringField(request.body.loginId);
+    const securityCode = typeof request.body.securityCode === "string" ? request.body.securityCode : "";
     const password = typeof request.body.password === "string" ? request.body.password : "";
     const passwordConfirm = typeof request.body.passwordConfirm === "string" ? request.body.passwordConfirm : "";
 
-    if (!name || !loginId || password.length < 6 || password !== passwordConfirm) {
-      response.status(400).json({ message: "Name, login ID, and matching password are required." });
+    if (!name || !loginId || !securityCode || password.length < 6 || password !== passwordConfirm) {
+      response.status(400).json({ message: "Name, login ID, security code, and matching password are required." });
       return;
     }
 
@@ -134,40 +118,41 @@ adminRouter.post("/signup", async (request, response, next) => {
       return;
     }
 
-    const invite = await prisma.managerInvite.findUnique({
+    const signupCode = await prisma.adminSignupCode.findUnique({
       where: {
-        name
+        codeKey: "MANAGER_SIGNUP"
       }
     });
-    if (!invite || invite.claimedByAdminUserId) {
-      response.status(403).json({ message: "This name is not allowed or already claimed." });
+    if (!signupCode) {
+      response.status(403).json({ message: "Manager signup security code is not configured." });
       return;
     }
 
-    const admin = await prisma.$transaction(async (tx) => {
-      const created = await tx.adminUser.create({
-        data: {
-          name,
-          displayName: name,
-          loginId,
-          passwordHash: await bcrypt.hash(password, 12),
-          role: "MANAGER",
-          status: "ACTIVE"
-        }
-      });
-      await tx.managerInvite.update({
-        where: {
-          id: invite.id
-        },
-        data: {
-          claimedByAdminUserId: created.id
-        }
-      });
+    const isSecurityCodeValid = await bcrypt.compare(securityCode, signupCode.codeHash);
+    if (!isSecurityCodeValid) {
+      response.status(403).json({ message: "Invalid manager signup security code." });
+      return;
+    }
 
-      return created;
+    const admin = await prisma.adminUser.create({
+      data: {
+        name,
+        displayName: name,
+        loginId,
+        passwordHash: await bcrypt.hash(password, 12),
+        role: "MANAGER",
+        status: "ACTIVE"
+      }
     });
 
     const session = toAdminSession(admin);
+    await recordAdminAuditLog({
+      admin: session,
+      action: "ADMIN_SIGNUP",
+      targetType: "AdminUser",
+      targetId: admin.id,
+      summary: `${session.name} 관리자가 가입했습니다.`
+    });
     response.status(201).json({
       token: createAdminToken(session),
       admin: session
@@ -210,8 +195,24 @@ adminRouter.patch("/me/password", requireAdmin, async (request: AdminRequest, re
         passwordHash: await bcrypt.hash(newPassword, 12)
       }
     });
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "PASSWORD_CHANGE",
+      targetType: "AdminUser",
+      targetId: admin.id,
+      summary: `${request.admin.name} 관리자가 자기 비밀번호를 변경했습니다.`
+    });
 
     response.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.get("/audit-logs", requireSuperAdmin, async (_request, response, next) => {
+  try {
+    const logs = await listAdminAuditLogs();
+    response.json({ logs });
   } catch (error) {
     next(error);
   }
@@ -228,63 +229,59 @@ adminRouter.get("/managers", requireSuperAdmin, async (_request, response, next)
   }
 });
 
-adminRouter.get("/manager-invites", requireSuperAdmin, async (_request, response, next) => {
+adminRouter.get("/signup-code", requireSuperAdmin, async (_request, response, next) => {
   try {
-    const invites = await prisma.managerInvite.findMany({
-      include: {
-        claimedBy: true
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
-    });
-    response.json({ invites: invites.map(inviteRecord) });
-  } catch (error) {
-    next(error);
-  }
-});
-
-adminRouter.post("/manager-invites", requireSuperAdmin, async (request, response, next) => {
-  try {
-    const name = nameField(request.body.name);
-    if (!name) {
-      response.status(400).json({ message: "Name is required." });
-      return;
-    }
-
-    const existingInvite = await prisma.managerInvite.findUnique({
+    const signupCode = await prisma.adminSignupCode.findUnique({
       where: {
-        name
-      },
-      include: {
-        claimedBy: true
+        codeKey: "MANAGER_SIGNUP"
       }
     });
-
-    if (existingInvite) {
-      response.status(200).json({
-        invite: inviteRecord(existingInvite),
-        alreadyExists: true,
-        message: "이미 등록된 이름입니다."
-      });
-      return;
-    }
-
-    const invite = await prisma.managerInvite.create({
-      data: {
-        name
-      },
-      include: {
-        claimedBy: true
-      }
+    response.json({
+      configured: Boolean(signupCode),
+      updatedAt: signupCode?.updatedAt.toISOString()
     });
-    response.status(201).json({ invite: inviteRecord(invite) });
   } catch (error) {
     next(error);
   }
 });
 
-adminRouter.patch("/managers/:id/status", requireSuperAdmin, async (request, response, next) => {
+adminRouter.patch("/signup-code", requireSuperAdmin, async (request: AdminRequest, response, next) => {
+  try {
+    const securityCode = typeof request.body.securityCode === "string" ? request.body.securityCode.trim() : "";
+    if (securityCode.length < 6) {
+      response.status(400).json({ message: "Security code must be at least 6 characters." });
+      return;
+    }
+
+    const signupCode = await prisma.adminSignupCode.upsert({
+      where: {
+        codeKey: "MANAGER_SIGNUP"
+      },
+      create: {
+        codeKey: "MANAGER_SIGNUP",
+        codeHash: await bcrypt.hash(securityCode, 12)
+      },
+      update: {
+        codeHash: await bcrypt.hash(securityCode, 12)
+      }
+    });
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "SIGNUP_CODE_UPDATE",
+      targetType: "AdminSignupCode",
+      targetId: signupCode.id,
+      summary: "세부 관리자 회원가입 보안코드를 변경했습니다."
+    });
+    response.json({
+      configured: true,
+      updatedAt: signupCode.updatedAt.toISOString()
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.patch("/managers/:id/status", requireSuperAdmin, async (request: AdminRequest, response, next) => {
   try {
     const status = stringField(request.body.status);
     if (status !== "ACTIVE" && status !== "DISABLED") {
@@ -300,13 +297,20 @@ adminRouter.patch("/managers/:id/status", requireSuperAdmin, async (request, res
         status
       }
     });
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "ADMIN_STATUS_UPDATE",
+      targetType: "AdminUser",
+      targetId: manager.id,
+      summary: `${manager.name ?? manager.loginId} 계정을 ${status} 상태로 변경했습니다.`
+    });
     response.json({ manager: adminUserSummary(manager) });
   } catch (error) {
     next(error);
   }
 });
 
-adminRouter.patch("/managers/:id/password", requireSuperAdmin, async (request, response, next) => {
+adminRouter.patch("/managers/:id/password", requireSuperAdmin, async (request: AdminRequest, response, next) => {
   try {
     const password = typeof request.body.password === "string" ? request.body.password : "";
     if (password.length < 6) {
@@ -321,6 +325,13 @@ adminRouter.patch("/managers/:id/password", requireSuperAdmin, async (request, r
       data: {
         passwordHash: await bcrypt.hash(password, 12)
       }
+    });
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "ADMIN_PASSWORD_RESET",
+      targetType: "AdminUser",
+      targetId: manager.id,
+      summary: `${manager.name ?? manager.loginId} 계정의 비밀번호를 초기화했습니다.`
     });
     response.json({ manager: adminUserSummary(manager) });
   } catch (error) {
@@ -403,11 +414,10 @@ adminRouter.patch("/games/:id", requireAdmin, async (request: AdminRequest, resp
     }
 
     const title = stringField(request.body.title);
-    const slug = stringField(request.body.slug);
     const shortDescription = stringField(request.body.shortDescription);
 
-    if (!title || !slug || !shortDescription) {
-      response.status(400).json({ message: "Title, slug, and short description are required." });
+    if (!title || !shortDescription) {
+      response.status(400).json({ message: "Title and short description are required." });
       return;
     }
 
@@ -427,7 +437,7 @@ adminRouter.patch("/games/:id", requireAdmin, async (request: AdminRequest, resp
 
     const game = await updateAdminGame(gameId, {
       title,
-      slug,
+      slug: previousGame.slug,
       year: optionalNumberField(request.body.year),
       developer: stringField(request.body.developer) || null,
       difficulty: difficultyField(request.body.difficulty),
@@ -435,6 +445,13 @@ adminRouter.patch("/games/:id", requireAdmin, async (request: AdminRequest, resp
       description: stringField(request.body.description) || null,
       status,
       creatorIds
+    });
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "GAME_UPDATE",
+      targetType: "Game",
+      targetId: game.id,
+      summary: `${game.title} 게임 정보를 수정했습니다.`
     });
 
     response.json({ game });
@@ -451,6 +468,13 @@ adminRouter.patch("/games/:id/archive", requireAdmin, async (request: AdminReque
     }
 
     const game = await archiveAdminGame(String(request.params.id));
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "GAME_ARCHIVE",
+      targetType: "Game",
+      targetId: game.id,
+      summary: `${game.title} 게임을 보관 처리했습니다.`
+    });
     response.json({ game });
   } catch (error) {
     next(error);
@@ -495,6 +519,16 @@ adminRouter.delete("/comments/:commentId", requireAdmin, async (request: AdminRe
     }
 
     await deleteCommentAsAdmin(comment.id);
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "COMMENT_DELETE",
+      targetType: "Comment",
+      targetId: comment.id,
+      summary: "관리자 권한으로 댓글을 삭제했습니다.",
+      metadata: {
+        gameId: comment.gameId
+      }
+    });
     response.status(204).send();
   } catch (error) {
     next(error);

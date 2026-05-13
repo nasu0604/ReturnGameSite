@@ -12,7 +12,7 @@ export function AdminLoginPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    setStatus("Signing in...");
+    setStatus("로그인하는 중입니다.");
 
     try {
       const payload = await apiPostJson<LoginResponse>("/admin/login", {
@@ -24,12 +24,12 @@ export function AdminLoginPage() {
       setAdminSession(payload.admin);
       navigate("/admin/upload");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Sign in failed.");
+      setStatus(error instanceof Error ? error.message : "로그인에 실패했습니다.");
     }
   }
 
   return (
-    <section className="admin-panel narrow">
+    <section className="admin-panel narrow admin-login-panel">
       <div className="section-heading compact">
         <p className="eyebrow">Admin access</p>
         <h1>관리자 로그인</h1>
