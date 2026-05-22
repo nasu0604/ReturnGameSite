@@ -29,6 +29,7 @@
     "imagePath": "/unity/DashHero/DashHero.png",
     "iframeSrc": "/unity/DashHero/index.html",
     "difficulty": 2,
+    "date": 2025,
     "developer": "방준수 이동혁 지승호",
     "how": "1. 플레이어를 방향키로 조작한다.\n2. 점프(Space)를 하거나 대쉬(Shift)를 하여 몬스터를 피하거나 죽인다.\n3. 점수를 최대한 높게 달성한다."
   },
@@ -39,6 +40,7 @@
     "imagePath": "/unity/fantasy-fight/fantasy-fight.png",
     "iframeSrc": "/unity/fantasy-fight/index.html",
     "difficulty": 3,
+    "date": 2025,
     "developer": "이형주",
     "how": "이 게임은 두명이서 하는 대난투 게임입니다. \n방 연결 : 닉네임과 방 연결 코드를 각각 작성합니다. 방 연결 코드는 숫자 다섯자리로 해야하며, 두명의 코드가 같아야 합니다. \n본인이 플레이할 캐릭터를 선택하고, 캐릭터의 콤보를 읽어봅니다. \n게임에 먼저 연결한 사람이 방장이 되며, 둘다 연결되면 방장이 게임을 시작합니다. \n난투 : 기본 이동은 방향키 입니다. 콤보 공격을 하려면 90프레임(약 1.5초) 안에 콤보를 입력해야합니다. \n콤보 설명은 게임에 연결하기 전 캐릭터 선택창에서 캐릭터 선택시 나타나는 버튼을 통해 정보를 볼 수 있습니다."
   },
@@ -49,7 +51,76 @@
       "imagePath": "/unity/bsp/bsp.png",
       "iframeSrc": "/unity/bsp/index.html",
       "difficulty": 4,
+      "date": 2025,
       "developer": "이한결 우정 이주혁 황우진",
       "how": "화살표로 이동\n왼쪽 Shift로 패링\nE로 공격\nQ로 강화공격\n달걀은 바라보는 방향으로 막음"
+  },
+  {
+    "id": "EntropyZero",
+    "name": "엔트로피 제로",
+    "main_desc": "물리학 과목에 기반한 각 보스들을 토벌하라!",
+    "imagePath": "/unity/EntropyZero/EntropyZero.png",
+    "iframeSrc": "/unity/EntropyZero/index.html",
+    "difficulty": 4,
+    "date": 2025,
+    "developer": "김도윤 서원균 조희성",
+    "how": "1. 조작방법 -기본 이동 : WASD / 공격키 : J\n2. BOSS 1 [ 역학에 기반한 보스! 머리에서 떨어지는 사과를 피해 보스를 공격해야한다! 반피 이하로 떨어지면 보스가 무적이 되며, 비콘 네개가 생성되는데 가장 열효율이 높은 비콘을 찾아 실드를 깨야한다!\nif 비콘을 깨면 플레이어의 이동속도만 느려짐\nelse if  비콘을 깨지 못하면 플레이어가 스턴먹으면서 데미지를 받게됨 ]\n3. BOSS 2 [ 전자기학에 기반한 보스! 전류의 흐름을 보고 에너지파를 피해야한다! 2페이즈에서는 자기장의 흐름에 플레이어 이동속도가 영향을 받으며 3페이즈에서는 날라오는 전자도 피해야한다! ] \n4. BOSS 3 [ 파동에 기반한 보스! 보스 데미지, 플레이어 이동속도, 투사체 이동 속도를 화살표 키를 사용하여 플레이어에게 유리하게 맞춰야한다! ]"
+  },
+  {
+    "id": "ANTIPITALISM",
+    "name": "ANTIPITALISM(개미탈리즘)",
+    "main_desc": "주식게임을 가장한 도박게임",
+    "imagePath": "/unity/ANTIPITALISM/ANTIPITALISM_Thumb.png",
+    "iframeSrc": "/unity/ANTIPITALISM/index.html",
+    "difficulty": 1,
+    "developer": "이호진 홍기현 윤채훈",
+    "date": 2025,
+    "how": "1. 저축을 이용한 안전한 돈벌기\n2. 주식과 뉴스를 이용한 전략적인 돈벌기\n3. 도박을 이용한 위험한 돈벌기"
+  },
+  {
+      "id": "realmofchallenge",
+      "name": "시련의 영역",
+      "main_desc": "시간 안에 가능한 많이 부숴라!",
+      "imagePath": "/unity/realmofchallenge/realmofchallenge.png",
+      "iframeSrc": "/unity/realmofchallenge/index.html",
+      "difficulty": 2,
+      "date": 2025,
+      "developer": "오준석 안태환",
+      "how": "제한 시간안에 검술로 타겟을 부수고 높은 점수를 얻자."
+  },
+  {
+      "id": "Cardefense",
+      "name": "Carddefense",
+      "main_desc": "카드로 타워를 강화하여 적을 막는 게임!",
+      "imagePath": "/unity/Cardefense/Cardefense.png",
+      "iframeSrc": "/unity/Cardefense/index.html",
+      "difficulty": 2,
+      "date": 2025,
+      "developer": "민윤재 이우진",
+      "how": "카드를 타워로 드래그 해 몰려오는 적을 막으세요"
+  },
+  {
+    "id":"FPS",
+    "name": "FPS",
+    "main_desc": "3D FPS 게임",
+    "imagePath": "FPS.png",
+    "embedType": "youtube",
+    "youtubeId": "4aBzheeWPXY?si=aD30qIrthMtX2WOd",
+    "difficulty": 2,
+    "developer": "이건희 안태환 오준석",
+    "date": 2025,
+    "caution": "※ 높은 그래픽 수준으로 웹에서 구동이 불가능합니다.\n댓글 링크에 있는 방법대로 PC에서 실행해주세요",
+    "how": "이동 : WASD\n달리기 : Left Shift\n걸어가기 : Left Ctrl\n발사 : 좌클릭\n조준 : 우클릭\n장전 : R\n점프 : SPACE\n웅크리기 : C\n기울이기 : Q, E\n무기 전환 : 1,2"
+  },
+  {
+    "id": "rG_D",
+    "name": "젤리키우기",
+    "main_desc": "귀여운 젤리를 키워보세요!",
+    "imagePath": "/unity/rG_D/rG_D.png",
+    "iframeSrc": "/unity/rG_D/index.html",
+    "difficulty": 1,
+    "developer": "최성윤 조희성 김도윤",
+    "date": 2024,
+    "how": "젤리를 클릭하며 키워보세요!"
   }
 ]

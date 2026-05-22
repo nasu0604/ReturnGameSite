@@ -127,9 +127,10 @@ const AdFitBanner = ({
 // 메인 페이지
 function Home() {
   const SHOW_HOME_AD = false;
-
   
-  const TITLE_TEXT = '@return Game;';
+  const [showPopup, setShowPopup] = useState(true); // 팝업 상태 추가
+  
+  const TITLE_TEXT = 'return Game;';
   const [titleIndex, setTitleIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -165,11 +166,12 @@ function Home() {
 
   const typedTitle = TITLE_TEXT.slice(0, titleIndex);
 
-return (
+  return (
     <div className="page-container home-page">
+
       <div className="home-hero">
-        <p className="home-tagline">2025학년도 제44회 경황제</p>
-        <h1 className="home-title"><span className="home-title-typing" aria-label="@return Game;">{typedTitle}</span></h1>
+       <p className="home-tagline">Since 2024</p>
+        <h1 className="home-title"><span className="home-title-typing" aria-label="return Game;">{typedTitle}</span></h1>
         <p className="home-subtitle">경희고등학교 게임 개발 동아리</p>
       </div>
       <div className="home-links">
@@ -264,25 +266,12 @@ function Project() {
   const getRatingCount = id => (ratings[id] || []).length;
   const getCommentCount = id => commentCounts[id] || 0;
 
-  const sortedProjects = useMemo(() => {
+const sortedProjects = useMemo(() => {
     const list = [...projectsData];
-    switch (sortOption) {
-      case 'popularity':
-        return list.sort(
-          (a, b) => (viewCounts[b.id] || 0) - (viewCounts[a.id] || 0)
-        );
-      case 'rating':
-        return list.sort(
-          (a, b) => getAverageRating(b.id) - getAverageRating(a.id)
-        );
-      case 'comments':
-        return list.sort(
-          (a, b) => (commentCounts[b.id] || 0) - (commentCounts[a.id] || 0)
-        );
-      default:
-        return list;
-    }
-  }, [sortOption, viewCounts, ratings, commentCounts]);
+    return list.sort(
+      (a, b) => (viewCounts[b.id] || 0) - (viewCounts[a.id] || 0)
+    );
+  }, [viewCounts]);
 
   // 드롭다운
   const navbar = document.querySelector('.navbar');
@@ -504,16 +493,6 @@ function ProjectDetails() {
   // 프로젝트 상세 페이지 UI
   return (
     <div className="page-container project-details-page">
-      {/* <div className="mobile-ad-container">
-        <AdFitBanner
-          adUnit="DAN-5HHAjw0y2pRiS3R9"
-          width={320}
-          height={100}
-          mobileAdUnit="DAN-5HHAjw0y2pRiS3R9"
-          mobileWidth={320}
-          mobileHeight={100}
-        />
-      </div>   */}
             <div className="project-layout">
         <div className="game-left">
           {/* 중앙: 게임 플레이 */}
@@ -547,7 +526,8 @@ function ProjectDetails() {
                       <div className="instruction-header-row">
                         <div className="instruction-header-left">
                           <span className="instruction-game-title">{project.name}</span>
-                          <span className="instruction-game-desc">{project.main_desc}</span>
+                          <span className="instruction-game-date">({project.date})</span>
+                          <span className="instruction-game-desc">| {project.main_desc}</span>
                         </div>
                         <div className="instruction-header-right">
                           <span className="instruction-developer">{project.developer}</span>
@@ -563,8 +543,6 @@ function ProjectDetails() {
         <div className="ratings-comments-wrapper">
                   <div className="ratings-comments">
                     <div className="comments-section">
-                      {/* 댓글 입력 폼 */}
-                      {/* <h2>댓글</h2> */}
                       <form onSubmit={handleAddComment} className="comment-form">
                         <div className="horizontal-inputs">
                           <input
@@ -638,13 +616,6 @@ function ProjectDetails() {
                   </div>
                 </div>
       </div>
-{/* <div className="pc-ad-container">
-        <AdFitBanner
-          adUnit="DAN-cbhNH2DQGsz5BG5u"
-          width={728}
-          height={90}
-        />
-      </div> */}
       <Link to="/project" className="floating-rewind-btn" aria-label="앞으로">
         <span className="material-icons">fast_rewind</span>
       </Link>
@@ -742,6 +713,22 @@ function Introduce() {
   );
 }
 
+// 저작권 안내 페이지 컴포넌트 추가
+function Copyright() {
+  return (
+    <div className="page-container copyright-page">
+      <h2>외부 자료 저작권 정보</h2>
+      <div className="copyright-content">
+        - 젤리키우기 (rG_D) : Copyright © Goldmetal<br />
+        - RasingTier (RasingTier) : Copyright © Riot Games, Inc.
+      </div>
+        <Link to="/" className="floating-home-btn" aria-label="메인으로">
+          <span className="material-icons">home</span>
+        </Link>
+    </div>
+  );
+}
+
 // 네비게이션 바
 function Navbar() {
   const location = useLocation();
@@ -780,7 +767,7 @@ function Navbar() {
   );
 }
 
-// Animation
+// Animation 라우터 설정 변경 (Copyright 페이지 추가)
 function AnimatedRoutes() {
   const location = useLocation();
 
@@ -816,6 +803,15 @@ function AnimatedRoutes() {
           element={
             <div key="project-details" className="animated-page fadeIn">
               <ProjectDetails />
+            </div>
+          } 
+        />
+        {/* 새롭게 추가된 라우트 */}
+        <Route 
+          path="/copyright" 
+          element={
+            <div key="copyright" className="animated-page fadeIn">
+              <Copyright />
             </div>
           } 
         />
@@ -986,7 +982,7 @@ function StarRating({ projectId, initialRating = 0, onRatingChange }) {
   );
 }
 
-// 푸터 컴포넌트
+// 푸터 컴포넌트 (저작권 링크 변경됨)
 function Footer() {
   return (
     <footer className="footer">
@@ -995,11 +991,11 @@ function Footer() {
           <div className="footer-brand">
             <span>return Game;</span>
             <div className="social-buttons">
-              <a href="https://www.instagram.com/_return_game_" target="_blank" rel="noopener noreferrer">
-                <img src="/logo_insta.svg" alt="Instagram" />
+              <a href="https://www.instagram.com/kh.returngame/" target="_blank" rel="noopener noreferrer">
+                <img src="/insta_white.svg" alt="Instagram" />
               </a>
               <a href="https://github.com/KH-ReturnGame" target="_blank" rel="noopener noreferrer">
-                <img src="/logo_github.svg" alt="GitHub" />
+                <img src="/git_white.svg" alt="GitHub" />
               </a>
             </div>
           </div>
@@ -1011,7 +1007,7 @@ function Footer() {
         </div>
         <div className="footer-right">
           <p className="footer-text">
-            사이트 내 <a href="/sources.txt" className="underline-link">일부 외부 자료</a>의 저작권은 해당 원저작자에게 있으며,<br/>
+            사이트 내 <Link to="/copyright" className="underline-link">일부 외부 자료</Link>의 저작권은 해당 원저작자에게 있으며,<br/>
             본 동아리는 이를 교육 및 비영리적 학습 목적으로만 사용하였습니다.<br/>
             Copyright © 2025 return Game, All rights reserved.
           </p>
@@ -1029,7 +1025,7 @@ function App() {
       <div className="App">
         {/* <Navbar /> */}
         <AnimatedRoutes />
-        {/* <Footer /> */}
+        <Footer />
       </div>
     </Router>
   );
