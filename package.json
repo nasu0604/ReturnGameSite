@@ -1,9 +1,21 @@
 {
-  "dependencies": {
-    "firebase": "^11.5.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router-dom": "^7.4.0",
-    "react-transition-group": "^4.4.5"
+  "name": "return-game-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "S3/CDN-backed rebuild for the return Game WebGL portal.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:api": "npm run dev -w apps/api",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

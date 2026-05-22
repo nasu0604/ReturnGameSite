@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GameStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum GameVisibility {
+  PUBLIC
+  HIDDEN
+}
+
+enum UploadStatus {
+  RECEIVED
+  VALIDATING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MANAGER
+}
+
+enum AdminStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum HistoryStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  loginId      String?  @unique
+  name         String?
+  passwordHash String
+  role         AdminRole   @default(MANAGER)
+  status       AdminStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  displayName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  claimedInvites ManagerInvite[] @relation("ClaimedManagerInvite")
+  createdGames   GameCreator[]
+  auditLogs      AdminAuditLog[]
+}
+
+model ManagerInvite {
+  id                   String     @id @default(cuid())
+  name                 String     @unique
+  claimedByAdminUserId String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  claimedBy            AdminUser? @relation("ClaimedManagerInvite", fields: [claimedByAdminUserId], references: [id], onDelete: SetNull)
+}
+
+model AdminSignupCode {
+  id        String   @id @default(cuid())
+  codeKey   String   @unique @default("MANAGER_SIGNUP")
+  codeHash  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Game {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  title            String
+  year             Int?
+  developer        String?
+  creatorNames     Json?
+  difficulty       Int?
+  shortDescription String
+  description      String?
+  copyrightNotice  String?
+  thumbnailUrl     String?
+  viewCount        Int           @default(0)
+  status           GameStatus    @default(DRAFT)
+  visibility       GameVisibility @default(PUBLIC)
+  tags             Json?
+  currentVersionId String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  versions         GameVersion[]
+  comments         Comment[]
+  uploads          Upload[]
+  creators         GameCreator[]
+}
+
+model GameVersion {
+  id           String   @id @default(cuid())
+  gameId       String
+  versionLabel String
+  entryUrl     String
+  assetBaseUrl String
+  s3Prefix     String
+  manifest     Json?
+  createdAt    DateTime @default(now())
+  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, versionLabel])
+}
+
+model Upload {
+  id           String       @id @default(cuid())
+  gameId       String?
+  originalName String
+  status       UploadStatus @default(RECEIVED)
+  sourceKey    String?
+  resultPrefix String?
+  errorMessage String?
+  progress     Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  game         Game?        @relation(fields: [gameId], references: [id], onDelete: SetNull)
+}
+
+model GameCreator {
+  id          String    @id @default(cuid())
+  gameId      String
+  adminUserId String
+  createdAt   DateTime  @default(now())
+  game        Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, adminUserId])
+}
+
+model AdminAuditLog {
+  id          String    @id @default(cuid())
+  adminUserId String?
+  action      String
+  targetType  String
+  targetId    String?
+  summary     String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([adminUserId])
+}
+
+model ClubHistory {
+  id           String        @id @default(cuid())
+  eventDate    DateTime      @default(now())
+  dateLabel    String
+  title        String
+  summary      String
+  description  String
+  imageUrl     String?
+  status       HistoryStatus @default(DRAFT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status, eventDate])
+}
+
+model SiteSetting {
+  key       String   @id
+  value     Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id           String   @id @default(cuid())
+  gameId       String
+  gameSlug     String   @default("")
+  author       String
+  body         String
+  authorIp     String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
