@@ -1,6 +1,6 @@
 import type { GameSummary } from "@return-game/shared";
 import { ArrowRight, Eye, MessageSquare, Play } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { apiGet, apiPostJson } from "../../api/client";
 
@@ -14,12 +14,41 @@ interface ViewResponse {
 
 const TITLE_TEXT = "return Game;";
 
+function easeOutCubic(progress: number) {
+  return 1 - Math.pow(1 - progress, 3);
+}
+
 function prefersReducedMotion() {
   return (
     typeof window !== "undefined" &&
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+}
+
+function animateScrollTo(targetTop: number, onComplete?: () => void) {
+  const startTop = window.scrollY;
+  const distance = targetTop - startTop;
+  const duration = Math.min(1100, Math.max(650, Math.abs(distance) * 0.7));
+  const startTime = window.performance.now();
+
+  function step(currentTime: number) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    window.scrollTo({
+      top: startTop + distance * easeOutCubic(progress),
+      left: 0
+    });
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      onComplete?.();
+    }
+  }
+
+  window.requestAnimationFrame(step);
 }
 
 export function GameListPage() {
@@ -152,6 +181,23 @@ export function GameListPage() {
     }
   }
 
+  function handleScrollCueClick(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+
+    const gamesSection = document.getElementById("games");
+    if (!gamesSection) return;
+
+    if (prefersReducedMotion()) {
+      gamesSection.scrollIntoView();
+      return;
+    }
+
+    const targetTop = gamesSection.getBoundingClientRect().top + window.scrollY;
+    animateScrollTo(targetTop, () => {
+      window.history.pushState(null, "", "#games");
+    });
+  }
+
   return (
     <section className="page-container home-page project-page">
       <div className="home-hero" ref={heroRef}>
@@ -165,7 +211,7 @@ export function GameListPage() {
           </span>
         </h1>
         <p className="home-subtitle">경희고등학교 게임 개발 동아리</p>
-        <a className="scroll-cue" href="#games" aria-label="게임 목록으로 이동">
+        <a className="scroll-cue" href="#games" aria-label="게임 목록으로 이동" onClick={handleScrollCueClick}>
           <span className="scroll-cue-label">아래로 스크롤</span>
           <span className="scroll-arrows" aria-hidden="true">
             <span />

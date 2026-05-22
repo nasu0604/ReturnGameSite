@@ -1,10 +1,15 @@
 ﻿import type { AdminSession, GameDetail, UploadProgress, UploadRecord } from "@return-game/shared";
 import { Plus, UploadCloud, X } from "lucide-react";
 import type { FormEvent } from "react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useRef, useState } from "react";
 import { apiGetAdmin, apiPostForm, getAdminSession, getAdminToken } from "../../api/client";
 import { resizeThumbnail } from "../../utils/thumbnail";
+import {
+  createUploadEtaBaseline,
+  UPLOAD_POLL_INTERVAL_MS,
+  type UploadEtaSample
+} from "../../utils/uploadEta";
+import { UploadProgressPanel } from "./UploadProgressPanel";
 import { ThumbnailImageInfo, WebglZipInfo } from "./WebglZipInfo";
 
 interface UploadResponse {
@@ -14,20 +19,59 @@ interface UploadResponse {
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
+function uploadStatusMessage(upload: UploadRecord) {
+  const progress = upload.progress;
+  const percent = progress ? ` ${Math.min(100, Math.max(0, progress.percent))}%` : "";
+
+  switch (upload.status) {
+    case "RECEIVED":
+      return "업로드 요청을 접수했습니다.";
+    case "VALIDATING":
+      return "zip 파일을 검증하고 있습니다.";
+    case "PROCESSING":
+      return `S3에 게임 파일을 업로드하는 중입니다.${percent}`;
+    case "COMPLETED":
+      return "업로드가 완료되었습니다.";
+    case "FAILED":
+      return upload.errorMessage ?? "업로드에 실패했습니다.";
+    default:
+      return "업로드 상태를 확인하는 중입니다.";
+  }
+}
+
 export function AdminDashboardPage() {
   const admin = getAdminSession<AdminSession>();
   const [status, setStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [uploadedGame, setUploadedGame] = useState<GameDetail | null>(null);
+  const uploadEtaBaselineRef = useRef<UploadEtaSample | null>(null);
   const [creatorNames, setCreatorNames] = useState<string[]>(
     admin?.role === "MANAGER" && admin.name ? [admin.name] : [""],
   );
 
+  function updateUploadProgress(progress: UploadProgress | null) {
+    if (!progress || progress.uploadedBytes <= 0 || progress.totalBytes <= 0) {
+      setUploadProgress(progress);
+      return;
+    }
+
+    const baseline = uploadEtaBaselineRef.current;
+    if (!baseline || progress.uploadedBytes < baseline.uploadedBytes) {
+      uploadEtaBaselineRef.current = {
+        uploadedBytes: progress.uploadedBytes,
+        observedAt: Date.now()
+      };
+    }
+
+    setUploadProgress(progress);
+  }
+
   async function pollUpload(uploadId: string) {
-    for (let attempt = 0; attempt < 1200; attempt += 1) {
+    for (let attempt = 0; attempt < 3600; attempt += 1) {
       const response = await apiGetAdmin<UploadResponse>(`/uploads/${uploadId}`);
       const record = response.upload;
-      setUploadProgress(record.progress ?? null);
+      updateUploadProgress(record.progress ?? null);
+      setStatus(uploadStatusMessage(record));
 
       if (record.status === "COMPLETED") {
         setStatus("업로드가 완료되었습니다.");
@@ -39,10 +83,7 @@ export function AdminDashboardPage() {
         throw new Error(record.errorMessage ?? "업로드에 실패했습니다.");
       }
 
-      const percent = record.progress?.percent ?? 0;
-      const currentFile = record.progress?.currentFile ? ` · ${record.progress.currentFile}` : "";
-      setStatus(`업로드 처리 중... ${percent}%${currentFile}`);
-      await wait(3000);
+      await wait(UPLOAD_POLL_INTERVAL_MS);
     }
 
     throw new Error("업로드가 아직 처리 중입니다. 잠시 후 다시 확인하세요.");
@@ -96,12 +137,15 @@ export function AdminDashboardPage() {
     }
 
     setStatus("zip 파일을 검증하고 업로드하는 중입니다...");
-    setUploadProgress(null);
+    uploadEtaBaselineRef.current = null;
+    updateUploadProgress(null);
     setUploadedGame(null);
 
     try {
       const response = await apiPostForm<UploadResponse>("/uploads/webgl-zip", formData);
-      setUploadProgress(response.upload.progress ?? null);
+      uploadEtaBaselineRef.current = createUploadEtaBaseline();
+      updateUploadProgress(response.upload.progress ?? null);
+      setStatus(uploadStatusMessage(response.upload));
 
       if (response.upload.status === "COMPLETED") {
         setStatus("업로드가 완료되었습니다.");
@@ -153,7 +197,7 @@ export function AdminDashboardPage() {
 
         <label>
           한줄 설명
-          <input name="shortDescription" defaultValue="티어를 합쳐 최고 티어에 도달하라" placeholder="한줄 설명" required />
+          <input name="shortDescription" placeholder="한줄 설명" required />
         </label>
 
         <div className="admin-form-wide creator-name-field">
@@ -212,26 +256,14 @@ export function AdminDashboardPage() {
 
         <label className="admin-form-wide app-file-field">
           <span className="app-file-label-row">
-            Unity WebGL zip
+            Unity WebGL Zip
             <WebglZipInfo placement="upload" />
           </span>
-          <input accept=".zip,application/zip" name="zip" required type="file" />
+          <input accept=".zip,application/zip" name="file" required type="file" />
         </label>
 
         {uploadProgress && (
-          <div className="upload-progress" role="status">
-            <div className="upload-progress-header">
-              <span>업로드 진행률</span>
-              <strong>{uploadProgress.percent}%</strong>
-            </div>
-            <div className="upload-progress-track">
-              <div className="upload-progress-bar" aria-label="업로드 진행률" style={{ width: `${uploadProgress.percent}%` }} />
-            </div>
-            <p>
-              {uploadProgress.uploadedFiles}/{uploadProgress.totalFiles} files
-              {uploadProgress.currentFile ? ` · ${uploadProgress.currentFile}` : ""}
-            </p>
-          </div>
+          <UploadProgressPanel progress={uploadProgress} etaBaseline={uploadEtaBaselineRef.current} />
         )}
 
         <button className="admin-primary-btn" type="submit">
@@ -241,17 +273,6 @@ export function AdminDashboardPage() {
       </form>
 
       {status && <p className="admin-status">{status}</p>}
-
-      {uploadedGame && (
-        <div className="upload-result-card">
-          <p>업로드된 게임</p>
-          <h2>{uploadedGame.title}</h2>
-          <div className="upload-result-actions">
-            <Link to={`/games/${uploadedGame.slug}`}>게임 보기</Link>
-            <Link to={`/admin/games/${uploadedGame.id}`}>관리하기</Link>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

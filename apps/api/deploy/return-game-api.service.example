@@ -1,0 +1,17 @@
+[Unit]
+Description=Return Game API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/ReturnGameSite/apps/api
+Environment=NODE_ENV=production
+Environment=PORT=4000
+ExecStart=/usr/bin/node dist/server.js
+Restart=always
+RestartSec=5
+User=ubuntu
+Group=ubuntu
+
+[Install]
+WantedBy=multi-user.target

@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AdminGameRecord,
   AdminSession,
   GameComment,
@@ -7,7 +7,7 @@ import type {
 } from "@return-game/shared";
 import { Plus, X } from "lucide-react";
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   apiDeleteAdmin,
@@ -19,6 +19,12 @@ import {
 } from "../../api/client";
 import { formatKoreanDateTime } from "../../utils/date";
 import { resizeThumbnail } from "../../utils/thumbnail";
+import {
+  createUploadEtaBaseline,
+  UPLOAD_POLL_INTERVAL_MS,
+  type UploadEtaSample
+} from "../../utils/uploadEta";
+import { UploadProgressPanel } from "./UploadProgressPanel";
 import { ThumbnailImageInfo, WebglQuestionInfo, WebglZipInfo } from "./WebglZipInfo";
 
 interface AdminGameResponse {
@@ -43,19 +49,25 @@ function normalizeCreatorNames(names: string[]) {
   return names.map((name) => name.trim().replace(/\s+/g, " ")).filter(Boolean);
 }
 
-function UploadProgressView({ progress }: { progress: UploadProgress }) {
-  return (
-    <div className="upload-progress">
-      <div className="upload-progress-bar" aria-label="업로드 진행률">
-        <span style={{ width: `${Math.min(100, Math.max(0, progress.percent))}%` }} />
-      </div>
-      <p>
-        {progress.percent}% · {progress.uploadedFiles}/{progress.totalFiles} files ·{" "}
-        {Math.round(progress.uploadedBytes / 1024 / 1024)}MB / {Math.round(progress.totalBytes / 1024 / 1024)}MB
-      </p>
-      {progress.currentFile && <p className="muted-text">현재 파일: {progress.currentFile}</p>}
-    </div>
-  );
+function uploadStatusMessage(upload: UploadRecord, elapsedMinutes?: number) {
+  const progress = upload.progress;
+  const percent = progress ? ` ${Math.min(100, Math.max(0, progress.percent))}%` : "";
+  const elapsed = elapsedMinutes ? `, 약 ${elapsedMinutes}분 경과` : "";
+
+  switch (upload.status) {
+    case "RECEIVED":
+      return "업데이트 요청을 접수했습니다.";
+    case "VALIDATING":
+      return "zip 파일을 검증하고 있습니다.";
+    case "PROCESSING":
+      return `S3에 게임 파일을 업로드하는 중입니다.${percent}${elapsed}`;
+    case "COMPLETED":
+      return "게임 실행 파일 업데이트가 완료되었습니다.";
+    case "FAILED":
+      return upload.errorMessage ?? "게임 파일 업데이트에 실패했습니다.";
+    default:
+      return "업데이트 상태를 확인하는 중입니다.";
+  }
 }
 
 export function AdminGameEditPage() {
@@ -70,6 +82,24 @@ export function AdminGameEditPage() {
   const [versionStatus, setVersionStatus] = useState("");
   const [versionProgress, setVersionProgress] = useState<UploadProgress | null>(null);
   const [creatorNames, setCreatorNames] = useState<string[]>([""]);
+  const versionEtaBaselineRef = useRef<UploadEtaSample | null>(null);
+
+  function updateVersionProgress(progress: UploadProgress | null) {
+    if (!progress || progress.uploadedBytes <= 0 || progress.totalBytes <= 0) {
+      setVersionProgress(progress);
+      return;
+    }
+
+    const baseline = versionEtaBaselineRef.current;
+    if (!baseline || progress.uploadedBytes < baseline.uploadedBytes) {
+      versionEtaBaselineRef.current = {
+        uploadedBytes: progress.uploadedBytes,
+        observedAt: Date.now()
+      };
+    }
+
+    setVersionProgress(progress);
+  }
 
   async function loadGame(gameId: string) {
     const [gamePayload, commentsPayload] = await Promise.all([
@@ -90,11 +120,11 @@ export function AdminGameEditPage() {
   async function pollUpload(uploadId: string) {
     const startedAt = Date.now();
 
-    for (let attempt = 0; attempt < 1200; attempt += 1) {
-      await new Promise((resolve) => window.setTimeout(resolve, 3000));
+    for (let attempt = 0; attempt < 3600; attempt += 1) {
       const payload = await apiGetAdmin<UploadResponse>(`/uploads/${uploadId}`);
       const elapsedMinutes = Math.max(1, Math.ceil((Date.now() - startedAt) / 60000));
-      setVersionProgress(payload.upload.progress ?? null);
+      updateVersionProgress(payload.upload.progress ?? null);
+      setVersionStatus(uploadStatusMessage(payload.upload, elapsedMinutes));
 
       if (payload.upload.status === "COMPLETED") {
         if (id) await loadGame(id);
@@ -106,7 +136,7 @@ export function AdminGameEditPage() {
         throw new Error(payload.upload.errorMessage ?? "게임 파일 업데이트에 실패했습니다.");
       }
 
-      setVersionStatus(`S3에 게임 파일을 업로드하는 중입니다. (${payload.upload.status}, 약 ${elapsedMinutes}분 경과)`);
+      await new Promise((resolve) => window.setTimeout(resolve, UPLOAD_POLL_INTERVAL_MS));
     }
 
     throw new Error("업데이트가 오래 걸리고 있습니다. 서버에서는 계속 처리 중일 수 있으니 잠시 후 다시 확인하세요.");
@@ -199,11 +229,14 @@ export function AdminGameEditPage() {
     }
 
     setVersionStatus("zip 파일을 업로드하고 검증하는 중입니다.");
-    setVersionProgress(null);
+    versionEtaBaselineRef.current = null;
+    updateVersionProgress(null);
 
     try {
       const payload = await apiPostForm<UploadResponse>(`/uploads/games/${id}/webgl-zip`, formData);
-      setVersionProgress(payload.upload.progress ?? null);
+      versionEtaBaselineRef.current = createUploadEtaBaseline();
+      updateVersionProgress(payload.upload.progress ?? null);
+      setVersionStatus(uploadStatusMessage(payload.upload));
       await pollUpload(payload.upload.id);
       form.reset();
     } catch (error) {
@@ -427,12 +460,12 @@ export function AdminGameEditPage() {
                 </button>
               )}
             </div>
-            {versionStatus && <p className="status-text admin-form-wide">{versionStatus}</p>}
             {versionProgress && (
               <div className="admin-form-wide">
-                <UploadProgressView progress={versionProgress} />
+                <UploadProgressPanel progress={versionProgress} etaBaseline={versionEtaBaselineRef.current} />
               </div>
             )}
+            {versionStatus && <p className="status-text admin-form-wide">{versionStatus}</p>}
           </form>
 
         </>

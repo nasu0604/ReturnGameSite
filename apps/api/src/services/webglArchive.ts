@@ -116,6 +116,32 @@ function shouldExtractUnityFile(relativePath: string) {
   return false;
 }
 
+function isGitLfsPointer(buffer: Buffer) {
+  const head = buffer.subarray(0, Math.min(buffer.length, 512)).toString("utf8");
+
+  return (
+    head.startsWith("version https://git-lfs.github.com/spec/v1") &&
+    /\noid sha256:[0-9a-f]{64}/i.test(head) &&
+    /\nsize \d+/i.test(head)
+  );
+}
+
+function hasWebAssemblyMagicNumber(buffer: Buffer) {
+  return buffer.length >= 4 && buffer[0] === 0x00 && buffer[1] === 0x61 && buffer[2] === 0x73 && buffer[3] === 0x6d;
+}
+
+function validateUnityFileContent(relativePath: string, buffer: Buffer) {
+  if (isGitLfsPointer(buffer)) {
+    throw new Error(
+      `${relativePath} 파일이 Git LFS pointer입니다. 실제 파일을 내려받은 뒤 다시 압축해서 업로드해주세요.`
+    );
+  }
+
+  if (/\.wasm$/i.test(relativePath) && !hasWebAssemblyMagicNumber(buffer)) {
+    throw new Error(`${relativePath} 파일이 올바른 WebAssembly 파일이 아닙니다. 빌드 파일을 다시 확인해주세요.`);
+  }
+}
+
 function collectBuildFiles(entries: string[]) {
   const buildFiles: BuildFiles = {
     data: [],
@@ -287,7 +313,9 @@ export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
     }
 
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-    fs.writeFileSync(targetPath, entry.getData());
+    const fileBuffer = entry.getData();
+    validateUnityFileContent(safeRelative, fileBuffer);
+    fs.writeFileSync(targetPath, fileBuffer);
   }
 
   normalizeUnityTemplateData(targetDir);
