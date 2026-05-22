@@ -1,7 +1,8 @@
 import type { AdminSession } from "@return-game/shared";
-import { Database, LogOut, UploadCloud, User, Users } from "lucide-react";
+import { Clock3, Database, LogOut, UploadCloud, User, Users } from "lucide-react";
 import { Link, Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { clearAdminToken, getAdminSession, getAdminToken } from "../../api/client";
+import logoDiscord from "../../assets/logo_discord.svg";
 import logoLong from "../../assets/logo_long.png";
 import { AdminLoginPage } from "./AdminLoginPage";
 import { AdminSignupPage } from "./AdminSignupPage";
@@ -22,6 +23,11 @@ export function AdminLayout() {
   }
 
   const isSuperAdmin = admin?.role === "SUPER_ADMIN";
+  const superAdminOnlyRoute = location.pathname.startsWith("/admin/history") || location.pathname.startsWith("/admin/managers");
+
+  if (!isSuperAdmin && superAdminOnlyRoute) {
+    return <Navigate to="/admin/games" replace />;
+  }
 
   return (
     <div className="admin-shell">
@@ -40,8 +46,14 @@ export function AdminLayout() {
           </NavLink>
           <NavLink to="/admin/games">
             <Database aria-hidden="true" />
-            {isSuperAdmin ? "게임 관리" : "내 게임 관리"}
+            게임 관리
           </NavLink>
+          {isSuperAdmin && (
+            <NavLink to="/admin/history">
+              <Clock3 aria-hidden="true" />
+              연혁 관리
+            </NavLink>
+          )}
           {isSuperAdmin && (
             <NavLink to="/admin/managers">
               <Users aria-hidden="true" />
@@ -62,9 +74,16 @@ export function AdminLayout() {
             로그아웃
           </button>
         </nav>
+        <div className="admin-sidebar-contact" aria-label="사이트 이용 문의">
+          <span>사이트 이용 문의:</span>
+          <img src={logoDiscord} alt="" aria-hidden="true" />
+          <strong>nasu0604</strong>
+        </div>
       </aside>
       <main className="admin-main">
-        <Outlet />
+        <div className="route-transition admin-route-transition" key={location.pathname}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

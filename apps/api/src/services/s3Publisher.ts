@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectsCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { createS3Client, getStorageConfig } from "./storage.js";
 
@@ -98,6 +98,80 @@ export async function publishGameThumbnail(input: {
   );
 
   return joinUrl(getPublicBaseUrl(bucket, region, cdnBaseUrl), key);
+}
+
+export async function publishHistoryImage(input: {
+  body: Buffer;
+  fileName: string;
+  contentType: string;
+}): Promise<string> {
+  const { bucket, cdnBaseUrl, uploadPrefix } = getStorageConfig();
+  const region = process.env.AWS_REGION ?? "ap-northeast-2";
+
+  if (!bucket) {
+    throw new Error("S3_BUCKET must be configured before uploading history images.");
+  }
+
+  const lowerName = input.fileName.toLowerCase();
+  const extension = lowerName.endsWith(".png")
+    ? "png"
+    : lowerName.endsWith(".webp")
+      ? "webp"
+      : lowerName.endsWith(".gif")
+        ? "gif"
+        : "jpg";
+  const cleanPrefix = uploadPrefix.replace(/^\/+|\/+$/g, "");
+  const key = [cleanPrefix, "history", `history-${Date.now()}.${extension}`].filter(Boolean).join("/");
+  const client = createS3Client();
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: input.body,
+      ContentType: input.contentType,
+      CacheControl: "public, max-age=31536000, immutable"
+    })
+  );
+
+  return joinUrl(getPublicBaseUrl(bucket, region, cdnBaseUrl), key);
+}
+
+export async function deleteS3Prefix(prefix: string) {
+  const { bucket } = getStorageConfig();
+  if (!bucket || !prefix) return;
+
+  const cleanPrefix = prefix.replace(/^\/+/, "");
+  const client = createS3Client();
+  let continuationToken: string | undefined;
+
+  do {
+    const listed = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: cleanPrefix,
+        ContinuationToken: continuationToken
+      })
+    );
+
+    const objects = listed.Contents?.map((object) => (object.Key ? { Key: object.Key } : null)).filter(
+      (object): object is { Key: string } => Boolean(object)
+    );
+
+    if (objects?.length) {
+      await client.send(
+        new DeleteObjectsCommand({
+          Bucket: bucket,
+          Delete: {
+            Objects: objects,
+            Quiet: true
+          }
+        })
+      );
+    }
+
+    continuationToken = listed.NextContinuationToken;
+  } while (continuationToken);
 }
 
 export async function publishWebglDirectory(input: {

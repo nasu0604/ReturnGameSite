@@ -2,7 +2,7 @@ import { Router } from "express";
 import fs from "node:fs";
 import path from "node:path";
 import multer from "multer";
-import { requireAdmin, type AdminRequest } from "../middleware/requireAdmin.js";
+import { requireAdmin, requireSuperAdmin, type AdminRequest } from "../middleware/requireAdmin.js";
 import {
   addGameVersionToExistingGame,
   getAdminGameById,
@@ -14,7 +14,12 @@ import {
 import { storagePaths } from "../services/localStorage.js";
 import { prisma } from "../services/db.js";
 import { recordAdminAuditLog } from "../services/adminAuditLog.js";
-import { publishGameThumbnail, publishWebglDirectory, type WebglPublishProgress } from "../services/s3Publisher.js";
+import {
+  publishGameThumbnail,
+  publishHistoryImage,
+  publishWebglDirectory,
+  type WebglPublishProgress
+} from "../services/s3Publisher.js";
 import { processWebglZip } from "../services/webglArchive.js";
 
 export const uploadsRouter = Router();
@@ -30,8 +35,8 @@ const upload = multer({
       return;
     }
 
-    if (file.fieldname === "thumbnail" && !file.mimetype.startsWith("image/")) {
-      callback(new Error("Only image files are accepted for thumbnails."));
+    if ((file.fieldname === "thumbnail" || file.fieldname === "image") && !file.mimetype.startsWith("image/")) {
+      callback(new Error("Only image files are accepted."));
       return;
     }
 
@@ -162,6 +167,7 @@ async function publishGameInBackground(input: {
   gameDirectory: string;
   versionLabel: string;
   creatorIds: string[];
+  creatorNames?: string[];
   thumbnailFilePath?: string;
   thumbnailMimeType?: string;
   admin?: AdminRequest["admin"];
@@ -194,6 +200,7 @@ async function publishGameInBackground(input: {
       difficulty: input.game.difficulty,
       shortDescription: input.game.shortDescription,
       description: input.game.description,
+      copyrightNotice: input.game.copyrightNotice,
       thumbnailUrl,
       versionLabel: input.versionLabel,
       entryUrl: published.entryUrl,
@@ -202,7 +209,8 @@ async function publishGameInBackground(input: {
       manifest: {
         buildFiles: input.game.buildFiles
       },
-      creatorIds: input.creatorIds
+      creatorIds: input.creatorIds,
+      creatorNames: input.creatorNames
     });
 
     await prisma.upload.update({
@@ -333,6 +341,34 @@ uploadsRouter.get("/:id", requireAdmin, async (request, response, next) => {
   }
 });
 
+uploadsRouter.post(
+  "/history-image",
+  requireSuperAdmin,
+  upload.single("image"),
+  async (request: AdminRequest, response, next) => {
+    try {
+      if (!request.file) {
+        response.status(400).json({ message: "업로드할 이미지를 선택해주세요." });
+        return;
+      }
+
+      const imageUrl = await publishHistoryImage({
+        body: fs.readFileSync(request.file.path),
+        fileName: request.file.originalname,
+        contentType: request.file.mimetype
+      });
+
+      response.status(201).json({ imageUrl });
+    } catch (error) {
+      next(error);
+    } finally {
+      if (request.file?.path) {
+        fs.rmSync(request.file.path, { force: true });
+      }
+    }
+  }
+);
+
 function creatorIdsField(value: unknown) {
   if (Array.isArray(value)) return value.map(String).filter(Boolean);
   const raw = stringField(value);
@@ -341,6 +377,25 @@ function creatorIdsField(value: unknown) {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch {
+    // Fall through to comma-separated parsing.
+  }
+
+  return raw
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function creatorNamesField(value: unknown) {
+  const raw = stringField(value);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed.map(String).map((item) => item.trim()).filter(Boolean);
+    }
   } catch {
     // Fall through to comma-separated parsing.
   }
@@ -583,16 +638,46 @@ uploadsRouter.post("/webgl-zip", requireAdmin, upload.fields([{ name: "file", ma
       developer: stringField(request.body.developer) || undefined,
       difficulty: difficultyField(request.body.difficulty),
       shortDescription: stringField(request.body.shortDescription) || undefined,
-      description: stringField(request.body.description) || undefined
+      description: stringField(request.body.description) || undefined,
+      copyrightNotice: stringField(request.body.copyrightNotice) || undefined
     });
+
+    const slugExists = await prisma.game.findUnique({
+      where: {
+        slug: game.slug
+      },
+      select: {
+        id: true
+      }
+    });
+    if (slugExists) {
+      await prisma.upload.update({
+        where: {
+          id: uploadId
+        },
+        data: {
+          status: "FAILED",
+          errorMessage: "이미 사용 중인 slug입니다. 다른 slug를 입력해주세요."
+        }
+      });
+      response.status(409).json({ message: "이미 사용 중인 slug입니다. 다른 slug를 입력해주세요." });
+      return;
+    }
 
     const versionLabel = new Date().toISOString().replace(/[:.]/g, "-");
     const gameDirectory = path.join(storagePaths.gamesDir, game.slug);
     const requestedCreatorIds = creatorIdsField(request.body.creatorIds);
+    const requestedCreatorNames = creatorNamesField(request.body.creatorNames);
     const creatorIds =
       request.admin?.role === "SUPER_ADMIN"
         ? requestedCreatorIds
         : [...new Set([request.admin?.id, ...requestedCreatorIds].filter((id): id is string => Boolean(id)))];
+    const creatorNames =
+      requestedCreatorNames.length > 0
+        ? requestedCreatorNames
+        : request.admin?.role === "MANAGER"
+          ? [request.admin.name]
+          : [];
 
     await prisma.upload.update({
       where: {
@@ -610,6 +695,7 @@ uploadsRouter.post("/webgl-zip", requireAdmin, upload.fields([{ name: "file", ma
       gameDirectory,
       versionLabel,
       creatorIds,
+      creatorNames,
       thumbnailFilePath: thumbnailFile?.path,
       thumbnailMimeType: thumbnailFile?.mimetype,
       admin: request.admin

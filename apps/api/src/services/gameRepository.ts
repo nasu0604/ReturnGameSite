@@ -33,8 +33,16 @@ function buildFilesFromManifest(manifest: unknown): GameDetail["buildFiles"] {
   return (manifest as { buildFiles?: GameDetail["buildFiles"] }).buildFiles;
 }
 
+function parseStringArray(value: Prisma.JsonValue | null | undefined): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
+}
+
 function toSummary(game: GameWithVersions): GameSummary {
   const version = currentVersion(game);
+  const displayCreatorNames = parseStringArray(
+    (game as GameWithVersions & { creatorNames?: Prisma.JsonValue | null }).creatorNames
+  );
   const publicCreators = (
     game as GameWithVersions & {
       creators?: Array<{
@@ -45,10 +53,11 @@ function toSummary(game: GameWithVersions): GameSummary {
       }>;
     }
   ).creators;
-  const creatorNames =
+  const linkedCreatorNames =
     publicCreators
       ?.map((creator) => creator.adminUser.name ?? creator.adminUser.loginId ?? "")
       .filter(Boolean) ?? [];
+  const creatorNames = displayCreatorNames.length > 0 ? displayCreatorNames : linkedCreatorNames;
 
   return {
     id: game.id,
@@ -73,7 +82,8 @@ function toDetail(game: GameWithVersions): GameDetail {
   return {
     ...toSummary(game),
     description: game.description ?? undefined,
-    status: game.status as SharedGameStatus,
+    copyrightNotice: (game as GameWithVersions & { copyrightNotice?: string | null }).copyrightNotice ?? undefined,
+    status: ((game as GameWithVersions & { visibility?: "PUBLIC" | "HIDDEN" }).visibility ?? "HIDDEN") as SharedGameStatus,
     buildFiles: buildFilesFromManifest(version?.manifest)
   };
 }
@@ -108,13 +118,18 @@ function toAdminRecord(
     _count?: {
       comments: number;
     };
-  }
+  },
+  admin?: AdminSession
 ): AdminGameRecord {
+  const isCreator = Boolean(admin && game.creators?.some((creator) => creator.adminUser.id === admin.id));
+
   return {
     ...toDetail(game),
     createdAt: game.createdAt.toISOString(),
     updatedAt: game.updatedAt.toISOString(),
-    creators: game.creators?.map((creator) => adminUserSummary(creator.adminUser)) ?? []
+    creators: game.creators?.map((creator) => adminUserSummary(creator.adminUser)) ?? [],
+    isCreator,
+    canManage: admin?.role === "SUPER_ADMIN" || isCreator
   };
 }
 
@@ -151,15 +166,7 @@ function publicGameInclude() {
 }
 
 function adminGameWhere(admin: AdminSession): Prisma.GameWhereInput {
-  if (admin.role === "SUPER_ADMIN") return {};
-
-  return {
-    creators: {
-      some: {
-        adminUserId: admin.id
-      }
-    }
-  };
+  return admin.role === "SUPER_ADMIN" ? {} : {};
 }
 
 function adminGameInclude() {
@@ -188,11 +195,11 @@ function adminGameInclude() {
 export async function listPublishedGames() {
   const games = await prisma.game.findMany({
     where: {
-      status: "PUBLISHED"
+      visibility: "PUBLIC"
     },
     include: publicGameInclude(),
     orderBy: {
-      updatedAt: "desc"
+      viewCount: "desc"
     }
   });
 
@@ -203,7 +210,7 @@ export async function getPublishedGameBySlug(slug: string) {
   const game = await prisma.game.findFirst({
     where: {
       slug,
-      status: "PUBLISHED"
+      visibility: "PUBLIC"
     },
     include: publicGameInclude()
   });
@@ -215,7 +222,7 @@ export async function getPublishedGameById(id: string) {
   const game = await prisma.game.findFirst({
     where: {
       id,
-      status: "PUBLISHED"
+      visibility: "PUBLIC"
     },
     include: publicGameInclude()
   });
@@ -227,7 +234,7 @@ export async function incrementPublishedGameView(slug: string) {
   const game = await prisma.game.findFirst({
     where: {
       slug,
-      status: "PUBLISHED"
+      visibility: "PUBLIC"
     },
     select: {
       id: true
@@ -259,6 +266,7 @@ export async function upsertPublishedGame(input: {
   difficulty?: number;
   shortDescription: string;
   description?: string;
+  copyrightNotice?: string;
   thumbnailUrl: string;
   versionLabel: string;
   entryUrl: string;
@@ -266,31 +274,35 @@ export async function upsertPublishedGame(input: {
   s3Prefix: string;
   manifest: Prisma.InputJsonValue;
   creatorIds?: string[];
+  creatorNames?: string[];
 }) {
-  const game = await prisma.game.upsert({
+  const existing = await prisma.game.findUnique({
     where: {
       slug: input.slug
     },
-    create: {
+    select: {
+      id: true
+    }
+  });
+
+  if (existing) {
+    throw new Error("이미 사용 중인 slug입니다. 다른 slug를 입력해주세요.");
+  }
+
+  const game = await prisma.game.create({
+    data: {
       slug: input.slug,
       title: input.title,
       year: input.year,
       developer: input.developer,
+      creatorNames: input.creatorNames ?? (input.developer ? [input.developer] : []),
       difficulty: input.difficulty,
       shortDescription: input.shortDescription,
       description: input.description,
+      copyrightNotice: input.copyrightNotice,
       thumbnailUrl: input.thumbnailUrl,
-      status: "PUBLISHED"
-    },
-    update: {
-      title: input.title,
-      year: input.year,
-      developer: input.developer,
-      difficulty: input.difficulty,
-      shortDescription: input.shortDescription,
-      description: input.description,
-      thumbnailUrl: input.thumbnailUrl,
-      status: "PUBLISHED"
+      status: "PUBLISHED",
+      visibility: "PUBLIC"
     }
   });
 
@@ -379,7 +391,7 @@ export async function listAdminGames(admin: AdminSession) {
     }
   });
 
-  return games.map(toAdminRecord);
+  return games.map((game) => toAdminRecord(game, admin));
 }
 
 export async function getAdminGameById(id: string, admin: AdminSession) {
@@ -391,21 +403,25 @@ export async function getAdminGameById(id: string, admin: AdminSession) {
     include: adminGameInclude()
   });
 
-  return game ? toAdminRecord(game) : null;
+  if (!game) return null;
+
+  const record = toAdminRecord(game, admin);
+  return record.canManage ? record : null;
 }
 
 export async function updateAdminGame(
   id: string,
+  admin: AdminSession,
   input: {
-    slug: string;
     title: string;
     year?: number | null;
     developer?: string | null;
     difficulty?: number | null;
     shortDescription: string;
     description?: string | null;
+    copyrightNotice?: string | null;
     status: SharedGameStatus;
-    creatorIds?: string[];
+    creatorNames?: string[];
   }
 ) {
   const game = await prisma.$transaction(async (tx) => {
@@ -414,31 +430,17 @@ export async function updateAdminGame(
         id
       },
       data: {
-        slug: input.slug,
         title: input.title,
         year: input.year,
         developer: input.developer,
+        creatorNames: input.creatorNames ?? [],
         difficulty: input.difficulty,
         shortDescription: input.shortDescription,
         description: input.description,
-        status: input.status
+        copyrightNotice: input.copyrightNotice,
+        visibility: input.status
       }
     });
-
-    if (input.creatorIds) {
-      await tx.gameCreator.deleteMany({
-        where: {
-          gameId: id
-        }
-      });
-      await tx.gameCreator.createMany({
-        data: [...new Set(input.creatorIds)].map((adminUserId) => ({
-          gameId: id,
-          adminUserId
-        })),
-        skipDuplicates: true
-      });
-    }
 
     return tx.game.findUniqueOrThrow({
       where: {
@@ -448,7 +450,7 @@ export async function updateAdminGame(
     });
   });
 
-  return toAdminRecord(game);
+  return toAdminRecord(game, admin);
 }
 
 export async function updateAdminGameThumbnail(id: string, thumbnailUrl: string) {
@@ -465,18 +467,79 @@ export async function updateAdminGameThumbnail(id: string, thumbnailUrl: string)
   return toAdminRecord(game);
 }
 
-export async function archiveAdminGame(id: string) {
-  const game = await prisma.game.update({
+export async function registerCurrentAdminAsGameCreator(id: string, admin: AdminSession) {
+  const existing = await prisma.game.findUnique({
     where: {
       id
     },
-    data: {
-      status: "ARCHIVED"
+    select: {
+      creatorNames: true
+    }
+  });
+  const displayName = admin.name?.trim() || admin.loginId;
+  const creatorNames = parseStringArray(existing?.creatorNames);
+
+  await prisma.gameCreator.createMany({
+    data: [
+      {
+        gameId: id,
+        adminUserId: admin.id
+      }
+    ],
+    skipDuplicates: true
+  });
+
+  if (displayName && !creatorNames.includes(displayName)) {
+    await prisma.game.update({
+      where: {
+        id
+      },
+      data: {
+        creatorNames: [...creatorNames, displayName]
+      }
+    });
+  }
+
+  const game = await prisma.game.findUniqueOrThrow({
+    where: {
+      id
     },
     include: adminGameInclude()
   });
 
-  return toAdminRecord(game);
+  return toAdminRecord(game, admin);
+}
+
+export async function deleteAdminGame(id: string) {
+  const game = await prisma.game.findUnique({
+    where: {
+      id
+    },
+    include: {
+      versions: true
+    }
+  });
+
+  if (!game) return null;
+
+  await prisma.game.delete({
+    where: {
+      id
+    }
+  });
+
+  const versionPrefixes = game.versions.map((version) => version.s3Prefix).filter(Boolean);
+  const parentPrefixes = versionPrefixes
+    .map((prefix) => prefix.replace(/\/+$/g, "").split("/").slice(0, -1).join("/"))
+    .filter(Boolean);
+
+  return {
+    id: game.id,
+    title: game.title,
+    slug: game.slug,
+    thumbnailUrl: game.thumbnailUrl ?? undefined,
+    s3Prefixes: [...new Set([...parentPrefixes, ...versionPrefixes])]
+  };
 }
 
 export async function userCanManageGame(admin: AdminSession, gameId: string) {

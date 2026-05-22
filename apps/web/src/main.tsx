@@ -4,11 +4,13 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom"
 import { AdminLayout } from "./routes/admin/AdminLayout";
 import { AdminDashboardPage } from "./routes/admin/AdminDashboardPage";
 import { AdminGameEditPage } from "./routes/admin/AdminGameEditPage";
+import { AdminHistoryPage } from "./routes/admin/AdminHistoryPage";
 import { AdminGameListPage } from "./routes/admin/AdminGameListPage";
 import { AdminLoginPage } from "./routes/admin/AdminLoginPage";
 import { AdminManagersPage } from "./routes/admin/AdminManagersPage";
 import { AdminMePage } from "./routes/admin/AdminMePage";
 import { AdminSignupPage } from "./routes/admin/AdminSignupPage";
+import { AboutPage } from "./routes/public/AboutPage";
 import { GameDetailPage } from "./routes/public/GameDetailPage";
 import { GameListPage } from "./routes/public/GameListPage";
 import { RootLayout } from "./routes/public/RootLayout";
@@ -20,6 +22,7 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <GameListPage /> },
+      { path: "about", element: <AboutPage /> },
       { path: "games/:slug", element: <GameDetailPage /> }
     ]
   },
@@ -33,6 +36,7 @@ const router = createBrowserRouter([
       { path: "upload", element: <AdminDashboardPage /> },
       { path: "games", element: <AdminGameListPage /> },
       { path: "games/:id", element: <AdminGameEditPage /> },
+      { path: "history", element: <AdminHistoryPage /> },
       { path: "managers", element: <AdminManagersPage /> },
       { path: "me", element: <AdminMePage /> }
     ]

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { GameComment } from "@return-game/shared";
 import { prisma } from "./db.js";
+import { getKoreanDatabaseDate, serializeKoreanDatabaseDate } from "../utils/koreanTime.js";
 
 function toComment(comment: {
   id: string;
@@ -18,9 +19,9 @@ function toComment(comment: {
     author: comment.author,
     body: comment.body,
     authorIp: comment.authorIp ?? undefined,
-    createdAt: comment.createdAt.toISOString(),
-    updatedAt: comment.updatedAt.toISOString(),
-    deletedAt: comment.deletedAt?.toISOString()
+    createdAt: serializeKoreanDatabaseDate(comment.createdAt) ?? comment.createdAt.toISOString(),
+    updatedAt: serializeKoreanDatabaseDate(comment.updatedAt) ?? comment.updatedAt.toISOString(),
+    deletedAt: serializeKoreanDatabaseDate(comment.deletedAt)
   };
 }
 
@@ -35,7 +36,7 @@ export async function listCommentsByGameSlug(slug: string) {
       deletedAt: null,
       game: {
         slug,
-        status: "PUBLISHED"
+        visibility: "PUBLIC"
       }
     },
     orderBy: {
@@ -56,7 +57,7 @@ export async function createCommentForGameSlug(input: {
   const game = await prisma.game.findFirst({
     where: {
       slug: input.slug,
-      status: "PUBLISHED"
+      visibility: "PUBLIC"
     }
   });
 
@@ -65,13 +66,16 @@ export async function createCommentForGameSlug(input: {
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12);
+  const now = getKoreanDatabaseDate();
   const comment = await prisma.comment.create({
     data: {
       gameId: game.id,
       author: input.author,
       body: input.body,
       authorIp: input.authorIp,
-      passwordHash
+      passwordHash,
+      createdAt: now,
+      updatedAt: now
     }
   });
 
@@ -102,12 +106,14 @@ export async function deleteCommentAsAdmin(commentId: string) {
     throw new Error("Comment not found.");
   }
 
+  const now = getKoreanDatabaseDate();
   await prisma.comment.update({
     where: {
       id: comment.id
     },
     data: {
-      deletedAt: new Date()
+      deletedAt: now,
+      updatedAt: now
     }
   });
 }
@@ -129,12 +135,14 @@ export async function deleteComment(input: { commentId: string; password: string
     throw new Error("Password does not match.");
   }
 
+  const now = getKoreanDatabaseDate();
   await prisma.comment.update({
     where: {
       id: comment.id
     },
     data: {
-      deletedAt: new Date()
+      deletedAt: now,
+      updatedAt: now
     }
   });
 }

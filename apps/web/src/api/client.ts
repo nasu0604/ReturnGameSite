@@ -144,15 +144,21 @@ export async function apiPatchForm<T>(path: string, formData: FormData): Promise
   return response.json() as Promise<T>;
 }
 
-export async function apiDeleteAdmin(path: string): Promise<void> {
+export async function apiDeleteAdmin(path: string, body?: unknown): Promise<void> {
   const token = getAdminToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: "DELETE",
     headers: token
       ? {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          ...(body === undefined ? {} : { "Content-Type": "application/json" })
         }
-      : undefined
+      : body === undefined
+        ? undefined
+        : {
+            "Content-Type": "application/json"
+          },
+    body: body === undefined ? undefined : JSON.stringify(body)
   });
 
   if (!response.ok) {

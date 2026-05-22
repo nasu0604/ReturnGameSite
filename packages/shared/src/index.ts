@@ -1,6 +1,7 @@
-export type GameStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type GameStatus = "PUBLIC" | "HIDDEN";
 export type AdminRole = "SUPER_ADMIN" | "MANAGER";
 export type AdminStatus = "ACTIVE" | "DISABLED";
+export type HistoryStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export interface GameSummary {
   id: string;
@@ -20,6 +21,7 @@ export interface GameSummary {
 
 export interface GameDetail extends GameSummary {
   description?: string;
+  copyrightNotice?: string;
   buildFiles?: {
     data: string[];
     wasm: string[];
@@ -44,6 +46,8 @@ export interface AdminGameRecord extends GameDetail {
   updatedAt: string;
   commentCount: number;
   creators: AdminUserSummary[];
+  canManage: boolean;
+  isCreator: boolean;
 }
 
 export interface AdminAuditLogRecord {
@@ -54,6 +58,27 @@ export interface AdminAuditLogRecord {
   summary: string;
   admin?: AdminUserSummary;
   createdAt: string;
+}
+
+export interface AdminManagerGameRecord {
+  id: string;
+  slug: string;
+  title: string;
+  year?: number;
+  creatorNames?: string[];
+  registeredAt: string;
+}
+
+export interface ClubHistoryRecord {
+  id: string;
+  eventDate: string;
+  dateLabel: string;
+  title: string;
+  summary: string;
+  description: string;
+  status: HistoryStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AdminUserSummary {

@@ -8,6 +8,7 @@ import helmet from "helmet";
 import { ensureStorageFolders, storagePaths } from "./services/localStorage.js";
 import { adminRouter } from "./routes/admin.js";
 import { gamesRouter } from "./routes/games.js";
+import { historyRouter } from "./routes/history.js";
 import { uploadsRouter } from "./routes/uploads.js";
 
 const apiRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -54,6 +55,7 @@ app.get("/api/health", (_request, response) => {
 
 app.use("/api/admin", adminRouter);
 app.use("/api/games", gamesRouter);
+app.use("/api/history", historyRouter);
 app.use("/api/uploads", uploadsRouter);
 
 const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {

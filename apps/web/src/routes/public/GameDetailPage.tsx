@@ -1,9 +1,10 @@
 import type { GameComment, GameDetail } from "@return-game/shared";
+import { ChevronsLeft } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiDeleteJson, apiGet, apiPostJson } from "../../api/client";
+import { formatKoreanNumericDateTime } from "../../utils/date";
 
 interface GameResponse {
   game: GameDetail;
@@ -16,6 +17,8 @@ interface CommentsResponse {
 interface CommentResponse {
   comment: GameComment;
 }
+
+const DETAIL_INTRO_DELAY_MS = 700;
 
 function renderDifficulty(score?: number) {
   const normalized = Math.max(0, Math.min(5, score ?? 0));
@@ -33,17 +36,19 @@ function renderDescriptionLines(description?: string) {
   return ["게임 설명이 아직 입력되지 않았습니다."];
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  }).format(date);
+function GameDetailError({ message }: { message: string }) {
+  return (
+    <section className="game-detail-loading game-detail-error">
+      <div className="game-loading-panel">
+        <div className="game-loading-logo">return Game;</div>
+        <h1>게임을 불러오지 못했습니다.</h1>
+        <p>{message}</p>
+        <Link className="game-loading-home-link" to="/">
+          메인으로 돌아가기
+        </Link>
+      </div>
+    </section>
+  );
 }
 
 export function GameDetailPage() {
@@ -51,40 +56,62 @@ export function GameDetailPage() {
   const navigate = useNavigate();
   const [game, setGame] = useState<GameDetail | null>(null);
   const [comments, setComments] = useState<GameComment[]>([]);
-  const [status, setStatus] = useState("게임을 불러오는 중입니다.");
+  const [initialError, setInitialError] = useState("");
+  const [isIntroDelayDone, setIsIntroDelayDone] = useState(false);
   const [commentStatus, setCommentStatus] = useState("");
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0 });
   }, [slug]);
 
-  async function loadComments(currentSlug: string) {
+  async function fetchComments(currentSlug: string) {
     const payload = await apiGet<CommentsResponse>(`/games/${currentSlug}/comments`);
-    setComments(payload.comments);
+    return payload.comments;
   }
 
   useEffect(() => {
     if (!slug) return;
 
-    setStatus("게임을 불러오는 중입니다.");
+    let cancelled = false;
+
+    setInitialError("");
+    setGame(null);
+    setComments([]);
+    setIsIntroDelayDone(false);
+    setCommentStatus("");
+
+    const introTimer = window.setTimeout(() => {
+      if (!cancelled) setIsIntroDelayDone(true);
+    }, DETAIL_INTRO_DELAY_MS);
+
     apiGet<GameResponse>(`/games/${slug}`)
-      .then(async (payload) => {
-        setGame(payload.game);
-        setStatus("");
-        await loadComments(slug);
+      .then((gamePayload) => {
+        if (cancelled) return;
+        setGame(gamePayload.game);
       })
       .catch((error) => {
-        setStatus(error instanceof Error ? error.message : "게임을 불러오지 못했습니다.");
+        if (cancelled) return;
+        setInitialError(error instanceof Error ? error.message : "게임 정보를 불러오는 중 문제가 발생했습니다.");
       });
+
+    fetchComments(slug)
+      .then((commentPayload) => {
+        if (cancelled) return;
+        setComments(commentPayload);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setInitialError(error instanceof Error ? error.message : "댓글 정보를 불러오는 중 문제가 발생했습니다.");
+      });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(introTimer);
+    };
   }, [slug]);
 
   function handleBack() {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/");
+    navigate("/", { state: { scrollToTop: true } });
   }
 
   async function handleCommentSubmit(event: FormEvent<HTMLFormElement>) {
@@ -126,14 +153,21 @@ export function GameDetailPage() {
     }
   }
 
+  if (initialError) {
+    return <GameDetailError message={initialError || "게임 정보를 찾을 수 없습니다."} />;
+  }
+
+  if (!game) {
+    return <section className="game-detail-blank" aria-hidden="true" />;
+  }
+
   return (
-    <section className="game-detail-page">
-      {status && <p className="status-text">{status}</p>}
+    <section className={`game-detail-page${isIntroDelayDone ? " is-detail-entered" : " is-detail-preintro"}`}>
       <div className="project-layout">
         <div className="game-left">
           <div className="game-container">
             <div className="game-frame-wrapper">
-              {game?.entryUrl ? (
+              {game.entryUrl ? (
                 <iframe
                   className="game-iframe"
                   src={game.entryUrl}
@@ -143,8 +177,8 @@ export function GameDetailPage() {
                   allowFullScreen
                 />
               ) : (
-                <div className="game-player-placeholder">
-                  <span>{slug}</span>
+                <div className="game-player-placeholder" aria-hidden="true">
+                  <span />
                 </div>
               )}
             </div>
@@ -154,29 +188,35 @@ export function GameDetailPage() {
             <div className="instruction-box">
               <div className="instruction-header-row">
                 <div className="instruction-header-left">
-                  <span className="instruction-game-title">{game?.title ?? "WebGL Game"}</span>
+                  <span className="instruction-game-title">{game.title}</span>
                   <span className="instruction-game-desc">
-                    {game?.year ? `(${game.year}) | ` : ""}
-                    {game?.shortDescription ?? "게임 정보를 불러오는 중입니다."}
+                    {game.year ? `(${game.year}) | ` : ""}
+                    {game.shortDescription}
                   </span>
                 </div>
                 <div className="instruction-header-right">
-                  <span className="instruction-developer">{game?.developer ?? "제작자 미입력"}</span>
-                  <span className="instruction-difficulty">{renderDifficulty(game?.difficulty)}</span>
+                  <span className="instruction-developer">{game.developer ?? "제작자 미입력"}</span>
+                  <span className="instruction-difficulty">{renderDifficulty(game.difficulty)}</span>
                 </div>
               </div>
               <div className="instruction-how">
-                {renderDescriptionLines(game?.description).map((line) => (
+                {renderDescriptionLines(game.description).map((line) => (
                   <p key={line}>{line}</p>
                 ))}
               </div>
+              {game.copyrightNotice && (
+                <div className="instruction-copyright" aria-label="저작권 안내">
+                  {renderDescriptionLines(game.copyrightNotice).map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="game-back-button-row">
             <button className="game-back-button" type="button" onClick={handleBack} aria-label="이전 화면으로 이동">
-              <ArrowLeft aria-hidden="true" />
-              <span>뒤로</span>
+              <ChevronsLeft aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -196,7 +236,7 @@ export function GameDetailPage() {
                     required
                   />
                 </div>
-                <textarea className="comment-input" name="body" placeholder="댓글을 입력해주세요 (Enter로 등록)" required />
+                <textarea className="comment-input" name="body" placeholder="댓글을 입력해주세요" required />
                 <button className="comment-submit-btn" type="submit">
                   등록
                 </button>
@@ -208,9 +248,9 @@ export function GameDetailPage() {
                   <div className="comment-item" key={comment.id}>
                     <div className="comment-header">
                       <strong>{comment.author}</strong>
-                      <span className="comment-date">{formatDate(comment.createdAt)}</span>
+                      <p className="comment-text">{comment.body}</p>
+                      <span className="comment-date">{formatKoreanNumericDateTime(comment.createdAt)}</span>
                     </div>
-                    <p className="comment-text">{comment.body}</p>
                     <button
                       className="delete-comment-btn"
                       type="button"

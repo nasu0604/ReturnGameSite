@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+﻿import bcrypt from "bcryptjs";
 import { Router } from "express";
 import type { LoginResponse } from "@return-game/shared";
 import { requireAdmin, requireSuperAdmin, type AdminRequest } from "../middleware/requireAdmin.js";
@@ -6,13 +6,22 @@ import { createAdminToken, ensureConfiguredSuperAdmin, toAdminSession } from "..
 import { prisma } from "../services/db.js";
 import { listAdminAuditLogs, recordAdminAuditLog } from "../services/adminAuditLog.js";
 import {
+  createHistory,
+  deleteHistory,
+  getAdminHistoryById,
+  listAdminHistory,
+  updateHistory
+} from "../services/historyRepository.js";
+import {
   adminUserSummary,
-  archiveAdminGame,
+  deleteAdminGame,
   getAdminGameById,
   listAdminGames,
+  registerCurrentAdminAsGameCreator,
   updateAdminGame,
   userCanManageGame
 } from "../services/gameRepository.js";
+import { deleteS3Prefix } from "../services/s3Publisher.js";
 import { deleteCommentAsAdmin, listAdminCommentsByGameId } from "../services/commentRepository.js";
 
 export const adminRouter = Router();
@@ -44,11 +53,31 @@ function difficultyField(value: unknown) {
 
 function statusField(value: unknown) {
   const status = stringField(value);
-  if (status !== "PUBLISHED" && status !== "DRAFT" && status !== "ARCHIVED") {
-    throw new Error("Invalid game status.");
+  if (status !== "PUBLIC" && status !== "HIDDEN") {
+    throw new Error("寃뚯엫 寃뚯떆 ?곹깭媛 ?щ컮瑜댁? ?딆뒿?덈떎.");
   }
 
   return status;
+}
+
+function eventDateField(value: unknown) {
+  const raw = stringField(value);
+  const date = raw ? new Date(`${raw}T00:00:00`) : null;
+  if (!date || Number.isNaN(date.getTime())) {
+    throw new Error("?щ컮瑜??좎쭨瑜??좏깮?댁＜?몄슂.");
+  }
+
+  return date;
+}
+
+function creatorNamesField(value: unknown) {
+  const rawValues = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+  return rawValues
+    .map(String)
+    .map((item) => item.trim().replace(/\s+/g, " "))
+    .filter(Boolean)
+    .slice(0, 20)
+    .map((item) => item.slice(0, 60));
 }
 
 adminRouter.post("/login", async (request, response, next) => {
@@ -151,7 +180,7 @@ adminRouter.post("/signup", async (request, response, next) => {
       action: "ADMIN_SIGNUP",
       targetType: "AdminUser",
       targetId: admin.id,
-      summary: `${session.name} 관리자가 가입했습니다.`
+      summary: `${session.name} 愿由ъ옄媛 媛?낇뻽?듬땲??`
     });
     response.status(201).json({
       token: createAdminToken(session),
@@ -200,7 +229,7 @@ adminRouter.patch("/me/password", requireAdmin, async (request: AdminRequest, re
       action: "PASSWORD_CHANGE",
       targetType: "AdminUser",
       targetId: admin.id,
-      summary: `${request.admin.name} 관리자가 자기 비밀번호를 변경했습니다.`
+      summary: `${request.admin.name} 愿由ъ옄媛 ?먭린 鍮꾨?踰덊샇瑜?蹂寃쏀뻽?듬땲??`
     });
 
     response.json({ ok: true });
@@ -209,10 +238,21 @@ adminRouter.patch("/me/password", requireAdmin, async (request: AdminRequest, re
   }
 });
 
-adminRouter.get("/audit-logs", requireSuperAdmin, async (_request, response, next) => {
+adminRouter.get("/audit-logs", requireSuperAdmin, async (request, response, next) => {
   try {
-    const logs = await listAdminAuditLogs();
-    response.json({ logs });
+    const page = Number(request.query.page ?? 1);
+    const pageSize = Number(request.query.pageSize ?? 20);
+    const adminUserId = stringField(request.query.adminUserId);
+    const action = stringField(request.query.action);
+    const q = stringField(request.query.q);
+    const payload = await listAdminAuditLogs({
+      adminUserId: adminUserId || undefined,
+      action: action || undefined,
+      q: q || undefined,
+      page: Number.isFinite(page) ? page : 1,
+      pageSize: Number.isFinite(pageSize) ? pageSize : 20
+    });
+    response.json(payload);
   } catch (error) {
     next(error);
   }
@@ -224,6 +264,100 @@ adminRouter.get("/managers", requireSuperAdmin, async (_request, response, next)
       orderBy: [{ role: "asc" }, { createdAt: "desc" }]
     });
     response.json({ managers: managers.map(adminUserSummary) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.get("/managers/:id/games", requireSuperAdmin, async (request, response, next) => {
+  try {
+    const managerId = String(request.params.id);
+    const manager = await prisma.adminUser.findUnique({
+      where: {
+        id: managerId
+      },
+      select: {
+        id: true
+      }
+    });
+
+    if (!manager) {
+      response.status(404).json({ message: "愿由ъ옄瑜?李얠쓣 ???놁뒿?덈떎." });
+      return;
+    }
+
+    const links = await prisma.gameCreator.findMany({
+      where: {
+        adminUserId: managerId
+      },
+      include: {
+        game: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    response.json({
+      games: links.map((link) => ({
+        id: link.game.id,
+        slug: link.game.slug,
+        title: link.game.title,
+        year: link.game.year ?? undefined,
+        creatorNames: Array.isArray(link.game.creatorNames) ? link.game.creatorNames : undefined,
+        registeredAt: link.createdAt.toISOString()
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.delete("/managers/:id/games/:gameId", requireSuperAdmin, async (request: AdminRequest, response, next) => {
+  try {
+    const managerId = String(request.params.id);
+    const gameId = String(request.params.gameId);
+    const [manager, game] = await Promise.all([
+      prisma.adminUser.findUnique({
+        where: {
+          id: managerId
+        }
+      }),
+      prisma.game.findUnique({
+        where: {
+          id: gameId
+        }
+      })
+    ]);
+
+    if (!manager || !game) {
+      response.status(404).json({ message: "愿由ъ옄 ?먮뒗 寃뚯엫??李얠쓣 ???놁뒿?덈떎." });
+      return;
+    }
+
+    await prisma.gameCreator.delete({
+      where: {
+        gameId_adminUserId: {
+          gameId,
+          adminUserId: managerId
+        }
+      }
+    });
+
+    const managerName = manager.name ?? manager.loginId ?? "愿由ъ옄";
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "GAME_CREATOR_REGISTRATION_DELETE",
+      targetType: "GameCreator",
+      targetId: gameId,
+      summary: `${managerName} 愿由ъ옄??${game.title} 寃뚯엫 ?쒖옉???깅줉????젣?덉뒿?덈떎.`,
+      metadata: {
+        managerId,
+        gameId
+      }
+    });
+
+    response.status(204).send();
   } catch (error) {
     next(error);
   }
@@ -270,12 +404,109 @@ adminRouter.patch("/signup-code", requireSuperAdmin, async (request: AdminReques
       action: "SIGNUP_CODE_UPDATE",
       targetType: "AdminSignupCode",
       targetId: signupCode.id,
-      summary: "세부 관리자 회원가입 보안코드를 변경했습니다."
+      summary: "?몃? 愿由ъ옄 ?뚯썝媛??蹂댁븞肄붾뱶瑜?蹂寃쏀뻽?듬땲??"
     });
     response.json({
       configured: true,
       updatedAt: signupCode.updatedAt.toISOString()
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.get("/history", requireSuperAdmin, async (_request, response, next) => {
+  try {
+    const history = await listAdminHistory();
+    response.json({ history });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.post("/history", requireSuperAdmin, async (request: AdminRequest, response, next) => {
+  try {
+    const eventDate = eventDateField(request.body.eventDate ?? request.body.dateLabel);
+    const title = stringField(request.body.title);
+    const summary = stringField(request.body.summary);
+
+    if (!title || !summary) {
+      response.status(400).json({ message: "날짜, 제목, 한줄 설명을 입력해주세요." });
+      return;
+    }
+
+    const history = await createHistory({
+      eventDate,
+      title,
+      summary
+    });
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "HISTORY_CREATE",
+      targetType: "ClubHistory",
+      targetId: history.id,
+      summary: `${history.title} ?고쁺??異붽??덉뒿?덈떎.`
+    });
+    response.status(201).json({ history });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.get("/history/:id", requireSuperAdmin, async (request, response, next) => {
+  try {
+    const history = await getAdminHistoryById(String(request.params.id));
+    if (!history) {
+      response.status(404).json({ message: "History item not found." });
+      return;
+    }
+
+    response.json({ history });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.patch("/history/:id", requireSuperAdmin, async (request: AdminRequest, response, next) => {
+  try {
+    const eventDate = eventDateField(request.body.eventDate ?? request.body.dateLabel);
+    const title = stringField(request.body.title);
+    const summary = stringField(request.body.summary);
+
+    if (!title || !summary) {
+      response.status(400).json({ message: "날짜, 제목, 한줄 설명을 입력해주세요." });
+      return;
+    }
+
+    const history = await updateHistory(String(request.params.id), {
+      eventDate,
+      title,
+      summary
+    });
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "HISTORY_UPDATE",
+      targetType: "ClubHistory",
+      targetId: history.id,
+      summary: `${history.title} ?고쁺???섏젙?덉뒿?덈떎.`
+    });
+    response.json({ history });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.delete("/history/:id", requireSuperAdmin, async (request: AdminRequest, response, next) => {
+  try {
+    const history = await deleteHistory(String(request.params.id));
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "HISTORY_DELETE",
+      targetType: "ClubHistory",
+      targetId: history.id,
+      summary: `${history.title} ?고쁺????젣?덉뒿?덈떎.`
+    });
+    response.status(204).send();
   } catch (error) {
     next(error);
   }
@@ -302,7 +533,7 @@ adminRouter.patch("/managers/:id/status", requireSuperAdmin, async (request: Adm
       action: "ADMIN_STATUS_UPDATE",
       targetType: "AdminUser",
       targetId: manager.id,
-      summary: `${manager.name ?? manager.loginId} 계정을 ${status} 상태로 변경했습니다.`
+      summary: `${manager.name ?? manager.loginId} 怨꾩젙??${status} ?곹깭濡?蹂寃쏀뻽?듬땲??`
     });
     response.json({ manager: adminUserSummary(manager) });
   } catch (error) {
@@ -331,7 +562,7 @@ adminRouter.patch("/managers/:id/password", requireSuperAdmin, async (request: A
       action: "ADMIN_PASSWORD_RESET",
       targetType: "AdminUser",
       targetId: manager.id,
-      summary: `${manager.name ?? manager.loginId} 계정의 비밀번호를 초기화했습니다.`
+      summary: `${manager.name ?? manager.loginId} 怨꾩젙??鍮꾨?踰덊샇瑜?珥덇린?뷀뻽?듬땲??`
     });
     response.json({ manager: adminUserSummary(manager) });
   } catch (error) {
@@ -429,29 +660,23 @@ adminRouter.patch("/games/:id", requireAdmin, async (request: AdminRequest, resp
 
     const requestedStatus = statusField(request.body.status);
     const status = request.admin.role === "SUPER_ADMIN" ? requestedStatus : previousGame.status;
-    const rawCreatorIds = Array.isArray(request.body.creatorIds) ? request.body.creatorIds.map(String) : undefined;
-    const creatorIds =
-      request.admin.role === "SUPER_ADMIN"
-        ? rawCreatorIds
-        : [...new Set([request.admin.id, ...(rawCreatorIds ?? previousGame.creators.map((creator) => creator.id))])];
-
-    const game = await updateAdminGame(gameId, {
+    const game = await updateAdminGame(gameId, request.admin, {
       title,
-      slug: previousGame.slug,
       year: optionalNumberField(request.body.year),
-      developer: stringField(request.body.developer) || null,
+      developer: creatorNamesField(request.body.creatorNames).join(", ") || null,
       difficulty: difficultyField(request.body.difficulty),
       shortDescription,
       description: stringField(request.body.description) || null,
+      copyrightNotice: stringField(request.body.copyrightNotice) || null,
       status,
-      creatorIds
+      creatorNames: creatorNamesField(request.body.creatorNames)
     });
     await recordAdminAuditLog({
       admin: request.admin,
       action: "GAME_UPDATE",
       targetType: "Game",
       targetId: game.id,
-      summary: `${game.title} 게임 정보를 수정했습니다.`
+      summary: `${game.title} 寃뚯엫 ?뺣낫瑜??섏젙?덉뒿?덈떎.`
     });
 
     response.json({ game });
@@ -460,22 +685,77 @@ adminRouter.patch("/games/:id", requireAdmin, async (request: AdminRequest, resp
   }
 });
 
-adminRouter.patch("/games/:id/archive", requireAdmin, async (request: AdminRequest, response, next) => {
+adminRouter.post("/games/:id/register-creator", requireAdmin, async (request: AdminRequest, response, next) => {
   try {
-    if (request.admin?.role !== "SUPER_ADMIN") {
-      response.status(403).json({ message: "Only super admins can archive games." });
+    if (!request.admin) return;
+    const gameId = String(request.params.id);
+    const existingGame = await prisma.game.findUnique({
+      where: {
+        id: gameId
+      },
+      select: {
+        id: true,
+        title: true
+      }
+    });
+
+    if (!existingGame) {
+      response.status(404).json({ message: "Game not found." });
       return;
     }
 
-    const game = await archiveAdminGame(String(request.params.id));
+    const game = await registerCurrentAdminAsGameCreator(gameId, request.admin);
     await recordAdminAuditLog({
       admin: request.admin,
-      action: "GAME_ARCHIVE",
+      action: "GAME_CREATOR_SELF_REGISTER",
       targetType: "Game",
       targetId: game.id,
-      summary: `${game.title} 게임을 보관 처리했습니다.`
+      summary: `${request.admin.name} 愿由ъ옄媛 ${game.title} 寃뚯엫 ?쒖옉?먮줈 ?깅줉?덉뒿?덈떎.`
     });
-    response.json({ game });
+
+    response.status(201).json({ game });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.delete("/games/:id", requireSuperAdmin, async (request: AdminRequest, response, next) => {
+  try {
+    if (!request.admin) return;
+
+    const existingGame = await getAdminGameById(String(request.params.id), request.admin);
+    if (!existingGame) {
+      response.status(404).json({ message: "Game not found." });
+      return;
+    }
+
+    const confirm = stringField(request.body?.confirm);
+    if (confirm !== existingGame.slug && confirm !== existingGame.title) {
+      response.status(400).json({ message: "??젣?섎젮硫?寃뚯엫 ?쒕ぉ ?먮뒗 slug瑜??뺥솗???낅젰?댁＜?몄슂." });
+      return;
+    }
+
+    const game = await deleteAdminGame(String(request.params.id));
+    if (!game) {
+      response.status(404).json({ message: "Game not found." });
+      return;
+    }
+
+    for (const prefix of game.s3Prefixes) {
+      try {
+        await deleteS3Prefix(prefix);
+      } catch (error) {
+        console.warn(`[s3] failed to delete ${prefix}`, error);
+      }
+    }
+    await recordAdminAuditLog({
+      admin: request.admin,
+      action: "GAME_DELETE",
+      targetType: "Game",
+      targetId: game.id,
+      summary: `${game.title} 寃뚯엫???꾩쟾??젣?덉뒿?덈떎.`
+    });
+    response.status(204).send();
   } catch (error) {
     next(error);
   }
@@ -524,7 +804,7 @@ adminRouter.delete("/comments/:commentId", requireAdmin, async (request: AdminRe
       action: "COMMENT_DELETE",
       targetType: "Comment",
       targetId: comment.id,
-      summary: "관리자 권한으로 댓글을 삭제했습니다.",
+      summary: "愿由ъ옄 沅뚰븳?쇰줈 ?볤?????젣?덉뒿?덈떎.",
       metadata: {
         gameId: comment.gameId
       }

@@ -1,7 +1,7 @@
 import type { GameSummary } from "@return-game/shared";
-import { Eye, MessageSquare, Play } from "lucide-react";
+import { ArrowRight, Eye, MessageSquare, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { apiGet, apiPostJson } from "../../api/client";
 
 interface GamesResponse {
@@ -14,7 +14,16 @@ interface ViewResponse {
 
 const TITLE_TEXT = "return Game;";
 
+function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 export function GameListPage() {
+  const location = useLocation();
   const heroRef = useRef<HTMLDivElement | null>(null);
   const logoMotionRef = useRef({
     currentSkewX: 0,
@@ -34,7 +43,12 @@ export function GameListPage() {
   });
   const [games, setGames] = useState<GameSummary[]>([]);
   const [status, setStatus] = useState("게임 목록을 불러오는 중입니다.");
-  const [sortOption, setSortOption] = useState("default");
+
+  useEffect(() => {
+    if ((location.state as { scrollToTop?: boolean } | null)?.scrollToTop) {
+      window.scrollTo({ top: 0, left: 0 });
+    }
+  }, [location.key, location.state]);
 
   useEffect(() => {
     apiGet<GamesResponse>("/games")
@@ -48,12 +62,7 @@ export function GameListPage() {
   }, []);
 
   useEffect(() => {
-    const reduceMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (reduceMotion) return;
+    if (prefersReducedMotion()) return;
 
     let frameId = 0;
     const motion = logoMotionRef.current;
@@ -90,12 +99,7 @@ export function GameListPage() {
   }, []);
 
   useEffect(() => {
-    const reduceMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (reduceMotion) return;
+    if (prefersReducedMotion()) return;
 
     const motion = logoMotionRef.current;
 
@@ -148,16 +152,13 @@ export function GameListPage() {
     }
   }
 
-  const visibleGames = [...games].sort((a, b) => {
-    if (sortOption === "name") return a.title.localeCompare(b.title);
-    if (sortOption === "views") return b.viewCount - a.viewCount;
-    if (sortOption === "comments") return b.commentCount - a.commentCount;
-    return 0;
-  });
-
   return (
     <section className="page-container home-page project-page">
       <div className="home-hero" ref={heroRef}>
+        <Link className="home-about-link" to="/about">
+          <span>About</span>
+          <ArrowRight className="home-about-arrow" aria-hidden="true" />
+        </Link>
         <h1 className="home-title">
           <span className="home-title-typing" aria-label={TITLE_TEXT}>
             {TITLE_TEXT}
@@ -174,23 +175,11 @@ export function GameListPage() {
         </a>
       </div>
 
-      <div className="project-toolbar" id="games">
-        <select
-          className="sort-dropdown"
-          value={sortOption}
-          onChange={(event) => setSortOption(event.target.value)}
-          aria-label="게임 정렬"
-        >
-          <option value="default">기본순</option>
-          <option value="name">이름순</option>
-          <option value="views">조회순</option>
-          <option value="comments">댓글순</option>
-        </select>
-      </div>
+      <div className="project-toolbar" id="games" aria-hidden="true" />
 
       {status && <p className="status-text">{status}</p>}
       <ul className="project-grid">
-        {visibleGames.map((game) => (
+        {games.map((game) => (
           <li key={game.id}>
             <Link className="project-item" to={`/games/${game.slug}`} onClick={() => void handleGameOpen(game.slug)}>
               <div className="project-image-container">

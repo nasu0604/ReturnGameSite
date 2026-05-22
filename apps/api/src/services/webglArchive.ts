@@ -21,6 +21,7 @@ interface ProcessWebglZipInput {
   developer?: string;
   difficulty?: number;
   description?: string;
+  copyrightNotice?: string;
 }
 
 const unityTemplateStyle = `body { padding: 0; margin: 0; }
@@ -304,12 +305,13 @@ export function processWebglZip(input: ProcessWebglZipInput): GameDetail {
     difficulty: input.difficulty,
     shortDescription: input.shortDescription?.trim() || "Local WebGL upload",
     description: input.description?.trim() || undefined,
+    copyrightNotice: input.copyrightNotice?.trim() || undefined,
     thumbnailUrl: thumbnailPath ? `/local-games/${encodeURIComponent(slug)}/${thumbnailPath}` : "",
     currentVersion: "local",
     entryUrl: `/local-games/${encodeURIComponent(slug)}/index.html`,
     viewCount: 0,
     commentCount: 0,
-    status: "PUBLISHED",
+    status: "PUBLIC",
     buildFiles
   };
 }
