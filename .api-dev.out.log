@@ -1,0 +1,9 @@
+
+> return-game-platform@0.1.0 dev:api
+> npm run dev -w apps/api
+
+
+> @return-game/api@0.1.0 dev
+> tsx watch src/server.ts
+
+return Game API listening on http://localhost:4000
