@@ -3178,7 +3178,7 @@ button.status-pill:disabled {
   .home-about-link {
     font-size: 16px;
     right: 22px;
-    top: clamp(54px, 9vh, 88px);
+    top: clamp(88px, 14vh, 132px);
   }
 
   .home-title {
@@ -3186,6 +3186,7 @@ button.status-pill:disabled {
     line-height: 1.18;
     max-width: 100%;
     padding: 0 8px;
+    transform: translateY(-18px);
   }
 
   .home-title-typing {
@@ -3194,10 +3195,11 @@ button.status-pill:disabled {
 
   .home-subtitle {
     font-size: 18px;
+    transform: translateY(-18px);
   }
 
   .scroll-cue {
-    bottom: clamp(82px, 13vh, 128px);
+    bottom: clamp(150px, 22vh, 210px);
   }
 
   .public-footer-container {
