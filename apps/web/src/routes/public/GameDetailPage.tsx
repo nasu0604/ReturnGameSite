@@ -194,6 +194,9 @@ export function GameDetailPage() {
                     {game.shortDescription}
                   </span>
                 </div>
+                <button className="instruction-back-link" type="button" onClick={handleBack}>
+                  뒤로가기
+                </button>
                 <div className="instruction-header-right">
                   <span className="instruction-developer">{game.developer ?? "제작자 미입력"}</span>
                   <span className="instruction-difficulty">{renderDifficulty(game.difficulty)}</span>

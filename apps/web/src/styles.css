@@ -2858,6 +2858,10 @@ button.status-pill:disabled {
   transform: translateY(-3px);
 }
 
+.game-detail-page .instruction-back-link {
+  display: none;
+}
+
 .game-detail-page .instruction-game-title {
   color: var(--detail-text);
   font-size: 28px;
@@ -3178,7 +3182,14 @@ button.status-pill:disabled {
   }
 
   .home-title {
-    font-size: 52px;
+    font-size: clamp(38px, 10.8vw, 52px);
+    line-height: 1.18;
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  .home-title-typing {
+    max-width: 100%;
   }
 
   .home-subtitle {
@@ -3346,19 +3357,20 @@ button.status-pill:disabled {
   }
 
   .game-detail-page .game-back-button {
+    height: 44px;
     min-height: 44px;
-    padding: 0 14px;
+    padding: 0;
+    width: 44px;
   }
 
   .game-detail-page .game-back-button-row {
-    bottom: 16px;
-    padding-bottom: 28px;
-    padding-left: 8px;
+    display: none;
   }
 
   .game-detail-page .instruction-header-row {
     align-items: flex-start;
     flex-wrap: wrap;
+    position: relative;
   }
 
   .game-detail-page .instruction-box {
@@ -3371,11 +3383,36 @@ button.status-pill:disabled {
     flex: 1 1 100%;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
+  }
+
+  .game-detail-page .instruction-back-link {
+    background: transparent;
+    border: 0;
+    color: rgba(240, 244, 255, 0.38);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
+    pointer-events: auto;
+    position: absolute;
+    right: 0;
+    top: 2px;
+    text-align: right;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+    z-index: 2;
   }
 
   .game-detail-page .instruction-header-right {
     flex: 1 1 100%;
     justify-content: flex-start;
+    transform: none;
   }
 
   .game-detail-page .instruction-game-title {
@@ -3423,7 +3460,8 @@ button.status-pill:disabled {
   .game-detail-page .comment-text {
     grid-column: 1 / -1;
     grid-row: 2;
-    white-space: normal;
+    white-space: pre-line !important;
+    padding-right: 30px;
   }
 
   .game-detail-page .delete-comment-btn {
