@@ -270,6 +270,9 @@ export function AdminDashboardPage() {
           <UploadCloud size={18} />
           업로드
         </button>
+        <p className="upload-capacity-note">
+          안정적인 운영을 위해 사이트 이용자가 몰리는 시간대의 업로드와 여러 PC에서의 동시 업로드를 피해주세요. (API 서버 메모리: 1GB)
+        </p>
       </form>
 
       {status && <p className="admin-status">{status}</p>}

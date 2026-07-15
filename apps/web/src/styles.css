@@ -1671,6 +1671,13 @@ px;
   width: 18px;
 }
 
+.upload-capacity-note {
+  color: rgba(240, 244, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: -8px 0 0;
+}
+
 .admin-edit-form {
   display: grid;
   gap: 16px;
