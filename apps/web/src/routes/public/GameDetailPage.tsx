@@ -3,8 +3,10 @@ import { ChevronsLeft } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { apiDeleteJson, apiGet, apiPostJson } from "../../api/client";
+import { ApiRequestError, apiDeleteJson, apiGet, apiPostJson } from "../../api/client";
+import { SITE_NAME } from "../../siteContent";
 import { formatKoreanNumericDateTime } from "../../utils/date";
+import { usePageMetadata } from "../../utils/usePageMetadata";
 
 interface GameResponse {
   game: GameDetail;
@@ -57,8 +59,19 @@ export function GameDetailPage() {
   const [game, setGame] = useState<GameDetail | null>(null);
   const [comments, setComments] = useState<GameComment[]>([]);
   const [initialError, setInitialError] = useState("");
+  const [notFound, setNotFound] = useState(false);
   const [isIntroDelayDone, setIsIntroDelayDone] = useState(false);
   const [commentStatus, setCommentStatus] = useState("");
+
+  usePageMetadata(game ? {
+    title: `${game.title} | ${SITE_NAME}`,
+    description: game.shortDescription,
+    path: `/games/${encodeURIComponent(game.slug)}`,
+    image: game.thumbnailUrl
+  } : {
+    title: `게임 | ${SITE_NAME}`,
+    noindex: notFound
+  });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0 });
@@ -75,6 +88,7 @@ export function GameDetailPage() {
     let cancelled = false;
 
     setInitialError("");
+    setNotFound(false);
     setGame(null);
     setComments([]);
     setIsIntroDelayDone(false);
@@ -91,6 +105,7 @@ export function GameDetailPage() {
       })
       .catch((error) => {
         if (cancelled) return;
+        setNotFound(error instanceof ApiRequestError && error.status === 404);
         setInitialError(error instanceof Error ? error.message : "게임 정보를 불러오는 중 문제가 발생했습니다.");
       });
 

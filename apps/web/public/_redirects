@@ -1,1 +1,3 @@
-/*    /index.html   200
+/games/:slug    /game-shell    200
+/admin          /admin-shell   200
+/admin/*        /admin-shell   200

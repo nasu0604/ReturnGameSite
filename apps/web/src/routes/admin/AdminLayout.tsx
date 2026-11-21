@@ -4,10 +4,13 @@ import { Link, Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { clearAdminToken, getAdminSession, getAdminToken } from "../../api/client";
 import logoDiscord from "../../assets/logo_discord.svg";
 import logoLong from "../../assets/logo_long.png";
+import { SITE_NAME } from "../../siteContent";
+import { usePageMetadata } from "../../utils/usePageMetadata";
 import { AdminLoginPage } from "./AdminLoginPage";
 import { AdminSignupPage } from "./AdminSignupPage";
 
 export function AdminLayout() {
+  usePageMetadata({ title: `관리자 | ${SITE_NAME}`, noindex: true });
   const location = useLocation();
   const token = getAdminToken();
   const admin = getAdminSession<AdminSession>();

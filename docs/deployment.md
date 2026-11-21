@@ -38,7 +38,14 @@ Do not commit real secret values. Use the variable names below in each hosting c
 - Production branch: the branch you deploy from
 - Environment variables: set the `apps/web` variables listed above
 
-`apps/web/public/_redirects` routes deep links back to `index.html` for React Router.
+The web build emits separate HTML for the home and about pages. Cloudflare Pages serves `about.html` at `/about`. The rules in `apps/web/public/_redirects` preserve direct game and admin links by serving their React entry pages.
+
+## Search Engine Setup
+
+1. Confirm that `https://returngame.site/`, `/about`, `/robots.txt`, and `/sitemap.xml` are publicly reachable on the production domain.
+2. In [Google Search Console](https://search.google.com/search-console), add the domain `returngame.site` and publish the DNS TXT record Google assigns at the active DNS provider. For HTML-tag verification instead, select the URL-prefix property `https://returngame.site/` and set `GOOGLE_SITE_VERIFICATION` in the Cloudflare Pages production build environment.
+3. In [Naver Search Advisor](https://searchadvisor.naver.com/), register `https://returngame.site` and select HTML-tag verification. Set `NAVER_SITE_VERIFICATION` in the Cloudflare Pages production build environment. For both variables, copy only the value of the tag's `content` attribute.
+4. Redeploy when using HTML-tag verification and verify ownership in the corresponding console. Submit `https://returngame.site/sitemap.xml` to both consoles. The sitemap lists the home and about pages. Then use URL Inspection in Google and 웹페이지 수집 in Naver to request the home and about pages.
 
 ## Lightsail API Deployment
 

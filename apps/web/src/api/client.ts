@@ -26,11 +26,17 @@ export function clearAdminToken() {
   localStorage.removeItem(ADMIN_KEY);
 }
 
+export class ApiRequestError extends Error {
+  constructor(readonly status: number) {
+    super(`API request failed: ${status}`);
+  }
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`);
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    throw new ApiRequestError(response.status);
   }
 
   return response.json() as Promise<T>;

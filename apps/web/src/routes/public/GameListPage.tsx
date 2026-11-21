@@ -3,6 +3,8 @@ import { ArrowRight, Eye, MessageSquare, Play } from "lucide-react";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { apiGet, apiPostJson } from "../../api/client";
+import { homeMetadata } from "../../siteContent";
+import { usePageMetadata } from "../../utils/usePageMetadata";
 
 interface GamesResponse {
   games: GameSummary[];
@@ -52,6 +54,7 @@ function animateScrollTo(targetTop: number, onComplete?: () => void) {
 }
 
 export function GameListPage() {
+  usePageMetadata(homeMetadata);
   const location = useLocation();
   const heroRef = useRef<HTMLDivElement | null>(null);
   const logoMotionRef = useRef({
