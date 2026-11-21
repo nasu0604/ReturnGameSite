@@ -14,7 +14,6 @@ import { AboutPage } from "./routes/public/AboutPage";
 import { GameDetailPage } from "./routes/public/GameDetailPage";
 import { GameListPage } from "./routes/public/GameListPage";
 import { RootLayout } from "./routes/public/RootLayout";
-import { prepareSiteFont } from "./utils/prepareSiteFont";
 import "./styles.css";
 
 const router = createBrowserRouter([
@@ -44,10 +43,8 @@ const router = createBrowserRouter([
   }
 ]);
 
-void prepareSiteFont().then(() => {
-  ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
-  );
-});
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);

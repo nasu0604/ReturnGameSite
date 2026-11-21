@@ -3,13 +3,22 @@
   src: url("https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
+  font-display: optional;
+}
+
+@font-face {
+  font-family: "Pretendard Home Title";
+  src: url("https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
   font-display: block;
 }
 
 :root {
   color: rgba(240, 244, 255, 0.92);
   background: #07090f;
-  --site-font: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  --system-font: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  --site-font: "Pretendard Variable", var(--system-font);
   font-family: var(--site-font);
   --bg0: #07090f;
   --bg1: #0a0d16;
@@ -35,10 +44,6 @@
   --accent-c: rgba(140, 80, 255, 0.50);
   --accent-d: rgba(0, 225, 255, 0.45);
   --radius: 10px;
-}
-
-:root.site-font-ready {
-  --site-font: "Pretendard Variable", "Segoe UI", "Apple SD Gothic Neo", sans-serif;
 }
 
 * {
@@ -386,10 +391,20 @@ h1 {
   font-size: 18px;
 }
 
+.home-title,
+.home-subtitle {
+  font-family: var(--home-title-font, var(--system-font));
+}
+
+.home-hero[data-title-font="loading"] :is(.home-title, .home-subtitle) {
+  visibility: hidden;
+}
+
+.home-hero[data-title-font="pretendard"] {
+  --home-title-font: "Pretendard Home Title", var(--system-font);
+}
+
 .home-title {
-  background: linear-gradient(105deg, #7092e6 0%, #8478f0 42%, #a95ef9 100%);
-  background-clip: text;
-  color: transparent;
   font-size: 128px;
   font-weight: 900;
   letter-spacing: 0;
@@ -401,7 +416,7 @@ h1 {
 }
 
 .home-title-typing {
-  background: inherit;
+  background: linear-gradient(105deg, #7092e6 0%, #8478f0 42%, #a95ef9 100%);
   background-clip: text;
   color: transparent;
   display: inline-block;
@@ -418,6 +433,17 @@ h1 {
   will-change: transform;
   vertical-align: bottom;
   white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero:is([data-title-font="pretendard"], [data-title-font="fallback"]) .home-title-typing {
+    animation: homeTitleReveal 260ms steps(12, end);
+  }
+}
+
+@keyframes homeTitleReveal {
+  from { clip-path: inset(-50% 100% -50% 0); }
+  to { clip-path: inset(-50% -10% -50% -10%); }
 }
 
 .home-subtitle {

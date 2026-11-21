@@ -4,6 +4,7 @@ import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { apiGet, apiPostJson } from "../../api/client";
 import { homeMetadata } from "../../siteContent";
+import { prepareHomeTitleFont } from "../../utils/prepareSiteFont";
 import { usePageMetadata } from "../../utils/usePageMetadata";
 
 interface GamesResponse {
@@ -75,6 +76,17 @@ export function GameListPage() {
   });
   const [games, setGames] = useState<GameSummary[]>([]);
   const [status, setStatus] = useState("게임 목록을 불러오는 중입니다.");
+  const [titleFont, setTitleFont] = useState<"loading" | "pretendard" | "fallback">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    void prepareHomeTitleFont().then((fontReady) => {
+      if (!cancelled) setTitleFont(fontReady ? "pretendard" : "fallback");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if ((location.state as { scrollToTop?: boolean } | null)?.scrollToTop) {
@@ -203,7 +215,7 @@ export function GameListPage() {
 
   return (
     <section className="page-container home-page project-page">
-      <div className="home-hero" ref={heroRef}>
+      <div className="home-hero" data-title-font={titleFont} ref={heroRef}>
         <Link className="home-about-link" to="/about">
           <span>About</span>
           <ArrowRight className="home-about-arrow" aria-hidden="true" />
