@@ -1,70 +1,16 @@
 @font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 100;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraLight.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 200;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 300;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 500;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-SemiBold.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 600;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 700;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraBold.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 800;
-}
-
-@font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Black.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 900;
+  font-family: "Pretendard Variable";
+  src: url("https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
 }
 
 :root {
   color: rgba(240, 244, 255, 0.92);
   background: #07090f;
-  font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  --site-font: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  font-family: var(--site-font);
   --bg0: #07090f;
   --bg1: #0a0d16;
   --text: rgba(240, 244, 255, 0.92);
@@ -89,6 +35,10 @@
   --accent-c: rgba(140, 80, 255, 0.50);
   --accent-d: rgba(0, 225, 255, 0.45);
   --radius: 10px;
+}
+
+:root.site-font-ready {
+  --site-font: "Pretendard Variable", "Segoe UI", "Apple SD Gothic Neo", sans-serif;
 }
 
 * {
@@ -1517,7 +1467,7 @@ px;
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--text);
-  font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  font-family: var(--site-font);
   min-height: 42px;
   padding: 0 12px;
 }
@@ -1528,7 +1478,7 @@ px;
 .admin-edit-form input::placeholder,
 .admin-edit-form textarea::placeholder {
   color: rgba(240, 244, 255, 0.46);
-  font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  font-family: var(--site-font);
   opacity: 1;
 }
 
@@ -1586,7 +1536,7 @@ px;
 .admin-field-label {
   color: var(--muted);
   display: inline-flex;
-  font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  font-family: var(--site-font);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
@@ -1647,7 +1597,7 @@ px;
   color: rgb(210, 190, 255);
   cursor: pointer;
   display: inline-flex;
-  font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  font-family: var(--site-font);
   font-size: 15px;
   font-weight: 800;
   gap: 8px;
@@ -1755,7 +1705,7 @@ px;
 }
 
 .creator-name-row input {
-  font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", sans-serif !important;
+  font-family: var(--site-font) !important;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0;
@@ -1763,7 +1713,7 @@ px;
 
 .creator-name-row input::placeholder {
   color: rgba(240, 244, 255, 0.46);
-  font-family: "Pretendard", "Segoe UI", "Apple SD Gothic Neo", sans-serif !important;
+  font-family: var(--site-font) !important;
   font-size: 14px;
   font-weight: 700;
   opacity: 1;

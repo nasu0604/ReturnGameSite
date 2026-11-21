@@ -50,10 +50,14 @@ export function seoPages(verification: Record<string, string>): Plugin {
           ]
         }).replace(/</g, "\\u003c");
 
-        function page(metadata: Parameters<typeof renderMetadata>[0], body = "", extraHead = "") {
-          return template
-            .replace(/<title>[^<]*<\/title>/, () => `${renderMetadata(metadata)}${extraHead}`)
-            .replace('<div id="root"></div>', () => `<div id="root">${body}</div>`);
+        function page(metadata: Parameters<typeof renderMetadata>[0], fallbackContent = "", extraHead = "") {
+          const html = template.replace(/<title>[^<]*<\/title>/, () => `${renderMetadata(metadata)}${extraHead}`);
+          if (!fallbackContent) return html;
+
+          return html.replace(
+            '<div id="root"></div>',
+            () => `<div id="root"></div>\n    <noscript>${fallbackContent}</noscript>`
+          );
         }
 
         index.source = page(
