@@ -12,7 +12,8 @@ export const homeMetadata = {
 export const aboutMetadata = {
   title: `동아리 소개와 연혁 | ${SITE_NAME}`,
   description: "경희고등학교 게임 개발 동아리 return Game; 입니다. 게임 기획부터 배포까지 전반적인 과정을 체계적으로 진행하고 있습니다.",
-  path: "/about"
+  path: "/about",
+  noindex: "googlebot" as const
 };
 
 export const aboutParagraphs = [

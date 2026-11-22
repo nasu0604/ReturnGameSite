@@ -5,7 +5,7 @@ interface PageMetadata {
   description?: string;
   path?: string;
   image?: string;
-  noindex?: boolean;
+  noindex?: boolean | "googlebot";
 }
 
 const htmlEntities: Record<string, string> = {
@@ -26,7 +26,8 @@ export function renderMetadata({ title, description, path, image, noindex }: Pag
     tags.push(`<meta data-page-meta name="description" content="${escapeHtml(description)}">`);
   }
   if (noindex) {
-    tags.push('<meta data-page-meta name="robots" content="noindex">');
+    const crawler = noindex === "googlebot" ? "googlebot" : "robots";
+    tags.push(`<meta data-page-meta name="${crawler}" content="noindex">`);
   }
   if (path) {
     const url = escapeHtml(new URL(path, SITE_URL).href);

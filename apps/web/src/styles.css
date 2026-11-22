@@ -435,17 +435,6 @@ h1 {
   white-space: nowrap;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .home-hero:is([data-title-font="pretendard"], [data-title-font="fallback"]) .home-title-typing {
-    animation: homeTitleReveal 260ms steps(12, end);
-  }
-}
-
-@keyframes homeTitleReveal {
-  from { clip-path: inset(-50% 100% -50% 0); }
-  to { clip-path: inset(-50% -10% -50% -10%); }
-}
-
 .home-subtitle {
   color: var(--text-muted);
   font-size: 26px;
